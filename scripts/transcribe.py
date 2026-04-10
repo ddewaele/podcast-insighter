@@ -504,6 +504,13 @@ Examples:
         type=float,
         default=0.8,
         help="Silence gap in seconds that starts a new segment (default: 0.8).")
+    parser.add_argument("--analyze",
+        action="store_true",
+        help="After transcription, run LLM analysis to produce transcript_analysis.json. "
+             "Requires ANTHROPIC_API_KEY environment variable.")
+    parser.add_argument("--analyze-model",
+        default=os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6"),
+        help="Claude model for the analysis stage (default: claude-sonnet-4-6, or set CLAUDE_MODEL).")
 
     args = parser.parse_args()
 
@@ -613,6 +620,23 @@ Examples:
             if not cached_wav.exists():
                 shutil.copy(wav_path, cached_wav)
             log(f"[done] audio kept     → {artifact_dir}")
+
+        # ── Stage 5: LLM Analysis (optional) ────────────────────────────────
+        if args.analyze:
+            if not os.environ.get("ANTHROPIC_API_KEY"):
+                log("Warning: --analyze requires ANTHROPIC_API_KEY — skipping analysis stage.")
+            else:
+                from analyze import call_claude, validate_analysis
+                log(f"[analyze] Starting LLM analysis with {args.analyze_model}...")
+                analysis = call_claude(full_text, model=args.analyze_model)
+                analysis_path = artifact_dir / "transcript_analysis.json"
+                analysis_path.write_text(
+                    json.dumps(analysis, indent=2, ensure_ascii=False), encoding="utf-8"
+                )
+                log(f"[done] transcript_analysis.json → {analysis_path}")
+                log(f"[done] {len(analysis.get('quotes', []))} quotes, "
+                    f"{len(analysis.get('insights', []))} insights, "
+                    f"{len(analysis.get('references', []))} references")
 
         log("[done] All stages complete.")
 
