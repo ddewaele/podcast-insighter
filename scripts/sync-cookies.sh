@@ -31,10 +31,12 @@
 #     decryption). Choose "Always Allow" to avoid being prompted each time.
 #
 # SECURITY WARNING
-#   The exported cookies file grants full authenticated access to your YouTube
-#   account — treat it like a password. Anyone who obtains this file can act as
-#   you on YouTube (watch history, account details, etc.) until the session
-#   expires. With that in mind:
+#   This script exports only YouTube-relevant cookies (youtube.com,
+#   googlevideo.com, google.com, yt.be) — not your entire browser cookie store.
+#   Even so, the exported file grants full authenticated access to your YouTube
+#   account — treat it like a password. Anyone who obtains it can act as you on
+#   YouTube (watch history, account details, etc.) until the session expires.
+#   With that in mind:
 #
 #   - The file is stored on the remote server with permissions 600 (owner
 #     read/write only). Do not loosen these.
@@ -119,8 +121,20 @@ yt-dlp \
 # runtime for YouTube's n-challenge). That's fine — the cookie jar is written
 # during cleanup regardless. The COOKIE_COUNT check below confirms the export.
 
-COOKIE_COUNT=$(grep -c "youtube.com" "$LOCAL_TMP" 2>/dev/null || echo 0)
-info "Exported $COOKIE_COUNT YouTube cookies."
+# Filter to YouTube-relevant domains only — yt-dlp dumps the entire browser
+# cookie store, which includes cookies from every site Chrome has visited.
+# We only need these four domains for YouTube authentication to work:
+#   youtube.com     — core site cookies
+#   googlevideo.com — video CDN
+#   google.com      — auth tokens (SID, HSID, SAPISID, __Secure-* etc.)
+#   yt.be           — YouTube short URLs
+FILTERED_TMP="$(mktemp /tmp/yt-cookies-filtered.XXXXXX)"
+grep -E "^#|\.?(youtube\.com|googlevideo\.com|google\.com|yt\.be)" \
+    "$LOCAL_TMP" > "$FILTERED_TMP"
+mv "$FILTERED_TMP" "$LOCAL_TMP"
+
+COOKIE_COUNT=$(grep -cE "^[^#]" "$LOCAL_TMP" 2>/dev/null || echo 0)
+info "Exported $COOKIE_COUNT YouTube-relevant cookies (filtered from full browser store)."
 
 [[ "$COOKIE_COUNT" -eq 0 ]] && error "No YouTube cookies found — are you logged in to YouTube in $BROWSER?"
 
