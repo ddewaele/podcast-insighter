@@ -97,7 +97,10 @@ yt-dlp \
     --cookies "$LOCAL_TMP" \
     --skip-download \
     --quiet \
-    "$PROBE_URL"
+    "$PROBE_URL" 2>/dev/null || true
+# yt-dlp may exit non-zero if it can't resolve video formats (e.g. no JS
+# runtime for YouTube's n-challenge). That's fine — the cookie jar is written
+# during cleanup regardless. The COOKIE_COUNT check below confirms the export.
 
 COOKIE_COUNT=$(grep -c "youtube.com" "$LOCAL_TMP" 2>/dev/null || echo 0)
 info "Exported $COOKIE_COUNT YouTube cookies."
