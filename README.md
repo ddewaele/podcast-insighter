@@ -2,7 +2,37 @@
 
 A Vite + React frontend for visualizing structured podcast transcript analysis. Drop a JSON file in — no backend required.
 
-**Dev server:** `npm run dev` → http://localhost:5180
+**Dev server:** `npm run dev` → http://localhost:5173
+
+---
+
+## Screenshots
+
+### Drop zone
+
+| Dark mode | Light mode |
+|-----------|------------|
+| ![Drop zone – dark](public/screenshots/dropzone-dark.png) | ![Drop zone – light](public/screenshots/dropzone-light.png) |
+
+### Dashboard — Overview tab
+
+| Dark mode | Light mode |
+|-----------|------------|
+| ![Overview – dark](public/screenshots/overview-dark.png) | ![Overview – light](public/screenshots/overview-light.png) |
+
+### Dashboard — Other tabs
+
+| Quotes | Insights |
+|--------|----------|
+| ![Quotes](public/screenshots/quotes-dark.png) | ![Insights](public/screenshots/insights-dark.png) |
+
+| References | Timeline |
+|------------|----------|
+| ![References](public/screenshots/references-dark.png) | ![Timeline](public/screenshots/timeline-dark.png) |
+
+| Debates | |
+|---------|---|
+| ![Debates](public/screenshots/debates-dark.png) | |
 
 ---
 
