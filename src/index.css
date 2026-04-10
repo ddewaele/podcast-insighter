@@ -68,10 +68,10 @@ html {
   --text-dim: #64748b;
   --text-dimmer: #94a3b8;
 
-  --accent: #4f46e5;
-  --accent-light: #6366f1;
-  --accent-purple: #7c3aed;
-  --accent-purple-hover: #6d28d9;
+  --accent: #2563eb;
+  --accent-light: #3b82f6;
+  --accent-purple: #1d4ed8;
+  --accent-purple-hover: #1e40af;
 
   --scrollbar-track: #f1f5f9;
   --scrollbar-thumb: #cbd5e1;

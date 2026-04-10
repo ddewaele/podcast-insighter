@@ -16,7 +16,7 @@
   padding: 1.25rem 1.5rem;
   font-size: 1.0625rem;
   font-style: italic;
-  color: #c4b5fd;
+  color: var(--accent-purple);
   line-height: 1.6;
 }
 
