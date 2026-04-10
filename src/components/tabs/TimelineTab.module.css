@@ -28,7 +28,7 @@
 
 .progressLabel {
   font-size: 0.6875rem;
-  color: #334155;
+  color: var(--text-dimmer);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -57,11 +57,12 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #6366f1;
-  border: 2px solid #0f1117;
+  background: var(--accent);
+  border: 2px solid var(--dot-ring);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
   flex-shrink: 0;
   z-index: 1;
+  transition: border-color 0.2s ease;
 }
 
 .line {
@@ -87,7 +88,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6366f1;
+  color: var(--accent);
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.2);
   padding: 0.2rem 0.6rem;
@@ -97,12 +98,12 @@
 .topic {
   font-size: 1rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1.4;
 }
 
 .summary {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.7;
 }

@@ -1,11 +1,29 @@
-import { useState, useCallback, DragEvent } from 'react'
+import { useState, useCallback, useEffect, DragEvent } from 'react'
 import type { TranscriptAnalysis } from './types'
 import { DropZone } from './components/DropZone'
 import { Dashboard } from './components/Dashboard'
 
+type Theme = 'dark' | 'light'
+
+function getInitialTheme(): Theme {
+  const stored = localStorage.getItem('theme') as Theme | null
+  if (stored === 'dark' || stored === 'light') return stored
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+}
+
 export default function App() {
   const [data, setData] = useState<TranscriptAnalysis | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggleTheme = useCallback(() => {
+    setTheme(t => t === 'dark' ? 'light' : 'dark')
+  }, [])
 
   const handleFile = useCallback((file: File) => {
     setError(null)
@@ -37,8 +55,8 @@ export default function App() {
   }, [])
 
   if (data) {
-    return <Dashboard data={data} onReset={handleReset} />
+    return <Dashboard data={data} onReset={handleReset} theme={theme} onToggleTheme={toggleTheme} />
   }
 
-  return <DropZone onDrop={handleDrop} onFile={handleFile} error={error} />
+  return <DropZone onDrop={handleDrop} onFile={handleFile} error={error} theme={theme} onToggleTheme={toggleTheme} />
 }
