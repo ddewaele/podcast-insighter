@@ -137,7 +137,41 @@ info "Exported $COOKIE_COUNT YouTube-relevant cookies (filtered from full browse
 [[ "$COOKIE_COUNT" -eq 0 ]] && error "No YouTube cookies found — are you logged in to YouTube in $BROWSER?"
 
 # -----------------------------------------------------------------------------
-# Step 2 — Push to remote server
+# Step 2 — Security confirmation before copying to remote server
+# -----------------------------------------------------------------------------
+
+echo ""
+echo "  ╔══════════════════════════════════════════════════════════════════╗"
+echo "  ║                     ⚠  SECURITY WARNING                         ║"
+echo "  ╠══════════════════════════════════════════════════════════════════╣"
+echo "  ║                                                                  ║"
+echo "  ║  You are about to copy YouTube session cookies to a remote       ║"
+echo "  ║  server. These cookies grant full access to your YouTube         ║"
+echo "  ║  account without a password, for as long as the session lasts.  ║"
+echo "  ║                                                                  ║"
+echo "  ║  Anyone with access to the server or the cookies file can:       ║"
+echo "  ║    • Act as you on YouTube                                       ║"
+echo "  ║    • Access your watch history and account details               ║"
+echo "  ║                                                                  ║"
+echo "  ║  Destination : $REMOTE_SERVER:$REMOTE_PATH"
+echo "  ║                                                                  ║"
+echo "  ║  Mitigations applied by this script:                             ║"
+echo "  ║    • Only YouTube cookies are exported (not your full browser)   ║"
+echo "  ║    • Transfer is encrypted (scp over SSH)                        ║"
+echo "  ║    • File permissions set to 600 on the server                   ║"
+echo "  ║                                                                  ║"
+echo "  ║  Recommendation: use a dedicated YouTube account, not your       ║"
+echo "  ║  personal one, if the server is shared or not fully trusted.     ║"
+echo "  ║                                                                  ║"
+echo "  ╚══════════════════════════════════════════════════════════════════╝"
+echo ""
+
+read -r -p "  Proceed? [y/N] " CONFIRM
+echo ""
+[[ "${CONFIRM,,}" == "y" ]] || { echo "[sync-cookies] Aborted."; exit 0; }
+
+# -----------------------------------------------------------------------------
+# Step 3 — Push to remote server
 # -----------------------------------------------------------------------------
 
 # Ensure the remote directory exists before copying.
