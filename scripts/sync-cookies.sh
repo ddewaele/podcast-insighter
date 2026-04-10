@@ -31,8 +31,8 @@
 #     decryption). Choose "Always Allow" to avoid being prompted each time.
 #
 # SECURITY WARNING
-#   This script exports only YouTube-relevant cookies (youtube.com,
-#   googlevideo.com, google.com, yt.be) — not your entire browser cookie store.
+#   This script exports only YouTube cookies (youtube.com, googlevideo.com,
+#   yt.be) — not your entire browser cookie store.
 #   Even so, the exported file grants full authenticated access to your YouTube
 #   account — treat it like a password. Anyone who obtains it can act as you on
 #   YouTube (watch history, account details, etc.) until the session expires.
@@ -121,15 +121,13 @@ yt-dlp \
 # runtime for YouTube's n-challenge). That's fine — the cookie jar is written
 # during cleanup regardless. The COOKIE_COUNT check below confirms the export.
 
-# Filter to YouTube-relevant domains only — yt-dlp dumps the entire browser
-# cookie store, which includes cookies from every site Chrome has visited.
-# We only need these four domains for YouTube authentication to work:
-#   youtube.com     — core site cookies
-#   googlevideo.com — video CDN
-#   google.com      — auth tokens (SID, HSID, SAPISID, __Secure-* etc.)
-#   yt.be           — YouTube short URLs
+# Filter to YouTube-only domains — yt-dlp dumps the entire browser cookie
+# store, which includes cookies from every site Chrome has visited.
+# NOTE: YouTube's core auth cookies (SID, HSID, SAPISID) live on .google.com,
+# not .youtube.com. If you get sign-in-required errors on the server, add
+# google\.com back to the pattern below.
 FILTERED_TMP="$(mktemp /tmp/yt-cookies-filtered.XXXXXX)"
-grep -E "^#|\.?(youtube\.com|googlevideo\.com|google\.com|yt\.be)" \
+grep -E "^#|\.?(youtube\.com|googlevideo\.com|yt\.be)" \
     "$LOCAL_TMP" > "$FILTERED_TMP"
 mv "$FILTERED_TMP" "$LOCAL_TMP"
 
