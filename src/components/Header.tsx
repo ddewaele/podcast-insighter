@@ -1,5 +1,6 @@
-import type { Theme, TranscriptAnalysis } from '../types'
+import type { Theme, TranscriptAnalysis, User } from '../types'
 import { ThemeToggle } from './ThemeToggle'
+import { UserMenu } from './UserMenu'
 import styles from './Header.module.css'
 
 interface Props {
@@ -7,9 +8,11 @@ interface Props {
   onReset: () => void
   theme: Theme
   onToggleTheme: () => void
+  user: User
+  onLogout: () => void
 }
 
-export function Header({ data, onReset, theme, onToggleTheme }: Props) {
+export function Header({ data, onReset, theme, onToggleTheme, user, onLogout }: Props) {
   const { metadata } = data
 
   return (
@@ -62,6 +65,9 @@ export function Header({ data, onReset, theme, onToggleTheme }: Props) {
             </svg>
             Load new file
           </button>
+
+          <div className={styles.divider} />
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
     </header>

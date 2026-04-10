@@ -70,6 +70,13 @@ export default function App() {
     setError(null)
   }, [])
 
+  const handleLogout = useCallback(async () => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    setUser(null)
+    setData(null)
+    setError(null)
+  }, [])
+
   // Blank screen while we check the session (avoids flash of login screen)
   if (!authChecked) return null
 
@@ -80,9 +87,9 @@ export default function App() {
 
   // Logged in, transcript loaded → dashboard
   if (data) {
-    return <Dashboard data={data} onReset={handleReset} theme={theme} onToggleTheme={toggleTheme} />
+    return <Dashboard data={data} onReset={handleReset} theme={theme} onToggleTheme={toggleTheme} user={user} onLogout={handleLogout} />
   }
 
   // Logged in, no transcript yet → drop zone
-  return <DropZone onDrop={handleDrop} onFile={handleFile} error={error} theme={theme} onToggleTheme={toggleTheme} />
+  return <DropZone onDrop={handleDrop} onFile={handleFile} error={error} theme={theme} onToggleTheme={toggleTheme} user={user} onLogout={handleLogout} />
 }

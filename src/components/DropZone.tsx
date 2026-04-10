@@ -1,6 +1,7 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
-import type { Theme } from '../types'
+import type { Theme, User } from '../types'
 import { ThemeToggle } from './ThemeToggle'
+import { UserMenu } from './UserMenu'
 import styles from './DropZone.module.css'
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   error: string | null
   theme: Theme
   onToggleTheme: () => void
+  user: User
+  onLogout: () => void
 }
 
 const FEATURES = [
@@ -18,7 +21,7 @@ const FEATURES = [
   { icon: '⚡', label: 'Topic timeline' },
 ]
 
-export function DropZone({ onDrop, onFile, error, theme, onToggleTheme }: Props) {
+export function DropZone({ onDrop, onFile, error, theme, onToggleTheme, user, onLogout }: Props) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -41,9 +44,16 @@ export function DropZone({ onDrop, onFile, error, theme, onToggleTheme }: Props)
 
   return (
     <div className={styles.page}>
-      <div className={styles.themeBtn}>
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-      </div>
+      <nav className={styles.topBar}>
+        <div className={styles.topBarBrand}>
+          <WaveformIconSmall />
+          <span className={styles.topBarTitle}>Podcast Insighter</span>
+        </div>
+        <div className={styles.topBarActions}>
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <UserMenu user={user} onLogout={onLogout} />
+        </div>
+      </nav>
 
       <div className={styles.hero}>
         <div className={styles.logoMark}>
@@ -89,6 +99,18 @@ export function DropZone({ onDrop, onFile, error, theme, onToggleTheme }: Props)
         </div>
       </div>
     </div>
+  )
+}
+
+function WaveformIconSmall() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
+      <rect x="4" y="20" width="4" height="8" rx="2" fill="#818cf8" />
+      <rect x="12" y="14" width="4" height="20" rx="2" fill="#818cf8" />
+      <rect x="20" y="8" width="4" height="32" rx="2" fill="#6366f1" />
+      <rect x="28" y="14" width="4" height="20" rx="2" fill="#818cf8" />
+      <rect x="36" y="18" width="4" height="12" rx="2" fill="#818cf8" />
+    </svg>
   )
 }
 
