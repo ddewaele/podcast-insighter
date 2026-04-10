@@ -5,17 +5,31 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "npx tsx --watch server/index.ts",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/oauth2": "^8.2.0",
+    "@fastify/session": "^11.1.1",
+    "@fastify/static": "^9.1.0",
+    "better-sqlite3": "^12.8.0",
+    "dotenv": "^17.4.1",
+    "fastify": "^5.8.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "playwright": "^1.59.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.5.3",
     "vite": "^5.4.2"
   }

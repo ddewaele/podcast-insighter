@@ -13,6 +13,14 @@ scripts/.venv/
 scripts/__pycache__/
 scripts/*.pyc
 
+# Environment variables
+.env
+
+# SQLite database
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
 # OS
 .DS_Store
 
