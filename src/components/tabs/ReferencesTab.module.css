@@ -111,7 +111,7 @@
 .name {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--accent-purple);
+  color: var(--accent-link);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -119,7 +119,7 @@
 }
 
 .name:hover {
-  color: var(--accent-purple-hover);
+  color: var(--accent-link-hover);
   text-decoration: underline;
 }
 

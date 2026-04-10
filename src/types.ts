@@ -1,3 +1,5 @@
+export type Theme = 'dark' | 'light'
+
 export interface TranscriptMetadata {
   title: string;
   speakers: string[];

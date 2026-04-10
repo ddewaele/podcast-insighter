@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { TranscriptAnalysis } from '../types'
+import type { Theme, TranscriptAnalysis } from '../types'
 import { Header } from './Header'
 import { OverviewTab } from './tabs/OverviewTab'
 import { QuotesTab } from './tabs/QuotesTab'
@@ -23,7 +23,7 @@ const TABS: { id: Tab; label: string; count?: (d: TranscriptAnalysis) => number 
 interface Props {
   data: TranscriptAnalysis
   onReset: () => void
-  theme: 'dark' | 'light'
+  theme: Theme
   onToggleTheme: () => void
 }
 

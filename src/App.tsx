@@ -1,14 +1,16 @@
 import { useState, useCallback, useEffect, DragEvent } from 'react'
-import type { TranscriptAnalysis } from './types'
+import type { Theme, TranscriptAnalysis } from './types'
 import { DropZone } from './components/DropZone'
 import { Dashboard } from './components/Dashboard'
 
-type Theme = 'dark' | 'light'
-
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('theme') as Theme | null
-  if (stored === 'dark' || stored === 'light') return stored
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  const theme = stored === 'dark' || stored === 'light'
+    ? stored
+    : window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  // Set synchronously so the CSS transition doesn't fire on first paint
+  document.documentElement.setAttribute('data-theme', theme)
+  return theme
 }
 
 export default function App() {
