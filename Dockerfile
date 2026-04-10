@@ -28,6 +28,9 @@ COPY --from=frontend /app/dist ./dist
 COPY server/ ./server/
 COPY tsconfig.server.json ./
 
+# postgresql-client provides psql for `railway ssh` → database inspection
+RUN apk add --no-cache postgresql-client
+
 # Persistent directories (mount a Railway volume at /app/data in prod)
 RUN mkdir -p data output
 
