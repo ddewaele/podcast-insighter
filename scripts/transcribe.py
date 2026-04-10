@@ -517,6 +517,18 @@ Examples:
     if not args.url and not args.audio_file:
         parser.error("provide a YouTube URL or --audio-file PATH")
 
+    # ── Decode base64-encoded cookies if provided via env var ───────────────
+    if not args.cookies and os.environ.get("YT_COOKIES_BASE64"):
+        import base64, tempfile as _tf
+        cookies_bytes = base64.b64decode(os.environ["YT_COOKIES_BASE64"])
+        _cookies_tmp = _tf.NamedTemporaryFile(
+            prefix="yt_cookies_", suffix=".txt", delete=False, mode="wb"
+        )
+        _cookies_tmp.write(cookies_bytes)
+        _cookies_tmp.close()
+        args.cookies = _cookies_tmp.name
+        log(f"[cookies] Decoded YT_COOKIES_BASE64 → {args.cookies}")
+
     if not args.no_diarize and not args.hf_token:
         log("Warning: no HuggingFace token found — skipping diarization.")
         log("         Provide one with --hf-token or the HF_TOKEN environment variable.")
