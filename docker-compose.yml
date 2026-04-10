@@ -1,18 +1,33 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: transcriber
+      POSTGRES_PASSWORD: transcriber
+      POSTGRES_DB: transcriber
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U transcriber"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     ports:
       - "3001:3001"
-    volumes:
-      # Persist SQLite database and generated transcript JSONs across container restarts
-      - transcript_data:/app/data
-      - transcript_output:/app/output
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     environment:
       NODE_ENV: production
+      DATABASE_URL: postgresql://transcriber:transcriber@postgres:5432/transcriber
     restart: unless-stopped
 
 volumes:
-  transcript_data:
-  transcript_output:
+  postgres_data:

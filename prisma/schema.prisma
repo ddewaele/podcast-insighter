@@ -1,15 +1,9 @@
-// To switch to PostgreSQL:
-//   1. Change provider to "postgresql"
-//   2. Set DATABASE_URL to a postgres connection string, e.g.:
-//      DATABASE_URL="postgresql://user:password@localhost:5432/transcriber"
-//   3. Run: npx prisma migrate deploy
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
