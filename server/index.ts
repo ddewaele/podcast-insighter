@@ -15,6 +15,12 @@ import { jobRoutes } from './routes/jobs.js'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const isProd = process.env.NODE_ENV === 'production'
 
+const sessionSecret = process.env.SESSION_SECRET
+if (!sessionSecret) {
+  console.error('SESSION_SECRET env var is required but not set. Generate one with:\n  node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"')
+  process.exit(1)
+}
+
 const app = Fastify({ logger: { level: isProd ? 'warn' : 'info' } })
 
 // In production the server itself serves the frontend — no CORS needed.
@@ -31,7 +37,7 @@ await app.register(cookie)
 
 // Sessions
 await app.register(session, {
-  secret: process.env.SESSION_SECRET ?? 'replace-this-secret-in-production-min-32-chars!!',
+  secret: sessionSecret,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
