@@ -1,5 +1,12 @@
 export type Theme = 'dark' | 'light'
 
+export interface User {
+  id: string
+  email: string
+  name: string
+  avatarUrl: string | null
+}
+
 export interface TranscriptMetadata {
   title: string;
   speakers: string[];
