@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    volumes:
+      # Persist SQLite database and generated transcript JSONs across container restarts
+      - transcript_data:/app/data
+      - transcript_output:/app/output
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+
+volumes:
+  transcript_data:
+  transcript_output:

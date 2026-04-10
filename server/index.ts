@@ -4,6 +4,8 @@ import cors from '@fastify/cors'
 import cookie from '@fastify/cookie'
 import session from '@fastify/session'
 import oauthPlugin from '@fastify/oauth2'
+import staticPlugin from '@fastify/static'
+import { existsSync } from 'fs'
 import { join } from 'path'
 import { fileURLToPath } from 'url'
 import { authRoutes } from './routes/auth.js'
@@ -11,14 +13,18 @@ import { transcriptRoutes } from './routes/transcripts.js'
 import { jobRoutes } from './routes/jobs.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const isProd = process.env.NODE_ENV === 'production'
 
-const app = Fastify({ logger: { level: 'info' } })
+const app = Fastify({ logger: { level: isProd ? 'warn' : 'info' } })
 
-// CORS — allow the Vite dev server
-await app.register(cors, {
-  origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
-  credentials: true,
-})
+// In production the server itself serves the frontend — no CORS needed.
+// In dev we allow the Vite origin.
+if (!isProd) {
+  await app.register(cors, {
+    origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    credentials: true,
+  })
+}
 
 // Cookies
 await app.register(cookie)
@@ -50,13 +56,24 @@ await app.register(oauthPlugin, {
   callbackUri: process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:3001/auth/google/callback',
 })
 
-// Routes
+// Routes (registered before static so /api/* always wins)
 await app.register(authRoutes)
 await app.register(transcriptRoutes)
 await app.register(jobRoutes)
 
 // Health check
 app.get('/api/health', async () => ({ ok: true }))
+
+// In production: serve the built frontend and fall back to index.html for SPA routing
+if (isProd) {
+  const distPath = join(__dirname, '..', 'dist')
+  if (existsSync(distPath)) {
+    await app.register(staticPlugin, { root: distPath, prefix: '/' })
+    app.setNotFoundHandler((_req, reply) => reply.sendFile('index.html'))
+  } else {
+    app.log.warn('dist/ not found — frontend not served. Run `npm run build` first.')
+  }
+}
 
 // Start
 const port = Number(process.env.PORT ?? 3001)

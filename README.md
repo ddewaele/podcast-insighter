@@ -355,6 +355,63 @@ won't solve that.
 
 ---
 
+## Database
+
+The backend uses SQLite via `better-sqlite3`. The database file is created automatically at `data/app.db` when the server first starts.
+
+### Schema
+
+| Table | Purpose |
+|-------|---------|
+| `users` | Google OAuth accounts (id, email, name, avatar_url) |
+| `transcripts` | Uploaded/generated analyses with visibility and status |
+| `jobs` | Background pipeline jobs and their progress |
+
+### Accessing the database
+
+**CLI (sqlite3)**
+
+```bash
+sqlite3 data/app.db
+```
+
+Useful queries:
+
+```sql
+-- List all users
+SELECT id, email, name, created_at FROM users;
+
+-- List all transcripts with owner name
+SELECT t.id, t.title, t.status, t.is_public, u.email, t.created_at
+FROM transcripts t JOIN users u ON t.user_id = u.id
+ORDER BY t.created_at DESC;
+
+-- List all jobs
+SELECT id, youtube_url, status, progress, created_at FROM jobs ORDER BY created_at DESC;
+```
+
+**GUI — TablePlus / DB Browser for SQLite**
+
+Open `data/app.db` directly. Both tools support SQLite and will pick up the WAL journal automatically.
+
+**Docker**
+
+When running in a container, the database lives in the named volume `transcript_data` mounted at `/app/data`. To open a shell and inspect it:
+
+```bash
+docker compose exec app sh
+sqlite3 /app/data/app.db
+```
+
+Or copy the file out to your host for inspection:
+
+```bash
+docker cp <container_name>:/app/data/app.db ./app.db
+sqlite3 app.db
+```
+
+---
+
 ## Tech stack
 
 - [Vite 5](https://vitejs.dev/) + [React 18](https://react.dev/) + TypeScript

@@ -2,6 +2,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import type { Theme, User } from '../types'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
+import { WaveformIconSmall } from './icons'
 import styles from './DropZone.module.css'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
   onToggleTheme: () => void
   user: User
   onLogout: () => void
+  onBack: () => void
 }
 
 const FEATURES = [
@@ -21,7 +23,7 @@ const FEATURES = [
   { icon: '⚡', label: 'Topic timeline' },
 ]
 
-export function DropZone({ onDrop, onFile, error, theme, onToggleTheme, user, onLogout }: Props) {
+export function DropZone({ onDrop, onFile, error, theme, onToggleTheme, user, onLogout, onBack }: Props) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -46,6 +48,9 @@ export function DropZone({ onDrop, onFile, error, theme, onToggleTheme, user, on
     <div className={styles.page}>
       <nav className={styles.topBar}>
         <div className={styles.topBarBrand}>
+          <button className={styles.backBtn} onClick={onBack} aria-label="Back to home">
+            <BackIcon />
+          </button>
           <WaveformIconSmall />
           <span className={styles.topBarTitle}>Podcast Insighter</span>
         </div>
@@ -102,14 +107,10 @@ export function DropZone({ onDrop, onFile, error, theme, onToggleTheme, user, on
   )
 }
 
-function WaveformIconSmall() {
+function BackIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
-      <rect x="4" y="20" width="4" height="8" rx="2" fill="#818cf8" />
-      <rect x="12" y="14" width="4" height="20" rx="2" fill="#818cf8" />
-      <rect x="20" y="8" width="4" height="32" rx="2" fill="#6366f1" />
-      <rect x="28" y="14" width="4" height="20" rx="2" fill="#818cf8" />
-      <rect x="36" y="18" width="4" height="12" rx="2" fill="#818cf8" />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 3L5 8l5 5" />
     </svg>
   )
 }

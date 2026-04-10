@@ -56,7 +56,7 @@ function firstName(name: string) {
 export function Avatar({ user, size }: { user: User; size: number }) {
   const initials = user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   if (user.avatarUrl) {
-    return <img src={user.avatarUrl} alt={user.name} width={size} height={size} className={styles.avatar} style={{ width: size, height: size }} />
+    return <img src={user.avatarUrl} alt={user.name} width={size} height={size} className={styles.avatar} style={{ width: size, height: size }} referrerPolicy="no-referrer" />
   }
   return (
     <div className={styles.avatarInitials} style={{ width: size, height: size, fontSize: size * 0.38 }}>

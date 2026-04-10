@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { v4 as uuid } from 'uuid'
-import { userQueries } from '../db.js'
+import { prisma } from '../db.js'
 
 interface GoogleProfile {
   id: string
@@ -17,26 +17,28 @@ export async function authRoutes(app: FastifyInstance) {
     try {
       const { token } = await app.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
 
-      // Fetch Google profile
       const resp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${token.access_token}` },
       })
       if (!resp.ok) throw new Error('Failed to fetch Google profile')
       const profile = (await resp.json()) as GoogleProfile
 
-      // Find or create user
-      let user = userQueries.findByGoogleId.get(profile.id)
-      if (!user) {
-        const id = uuid()
-        userQueries.create.run(id, profile.id, profile.email, profile.name, profile.picture ?? null)
-        user = userQueries.findById.get(id)!
-      }
+      // upsert so name/avatar stay current if the Google profile changes
+      const user = await prisma.user.upsert({
+        where: { googleId: profile.id },
+        update: { name: profile.name, avatarUrl: profile.picture ?? null },
+        create: {
+          id: uuid(),
+          googleId: profile.id,
+          email: profile.email,
+          name: profile.name,
+          avatarUrl: profile.picture ?? null,
+        },
+      })
 
-      // Set session
       request.session.set('userId', user.id)
       await request.session.save()
 
-      // Redirect to frontend
       reply.redirect(process.env.FRONTEND_URL ?? 'http://localhost:5173')
     } catch (err) {
       app.log.error(err)
@@ -49,15 +51,14 @@ export async function authRoutes(app: FastifyInstance) {
     const userId = request.session.get('userId')
     if (!userId) return reply.status(401).send({ error: 'Not authenticated' })
 
-    const user = userQueries.findById.get(userId)
+    const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) return reply.status(401).send({ error: 'User not found' })
 
     return {
       id: user.id,
       email: user.email,
       name: user.name,
-      avatarUrl: user.avatar_url,
-      createdAt: user.created_at,
+      avatarUrl: user.avatarUrl,
     }
   })
 

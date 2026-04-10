@@ -3,6 +3,9 @@ import type { Theme, TranscriptAnalysis, User } from './types'
 import { DropZone } from './components/DropZone'
 import { Dashboard } from './components/Dashboard'
 import { LoginScreen } from './components/LoginScreen'
+import { HomePage } from './components/HomePage'
+
+type View = 'home' | 'upload' | 'dashboard'
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('theme') as Theme | null
@@ -20,6 +23,7 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const [user, setUser] = useState<User | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
+  const [view, setView] = useState<View>('home')
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -44,10 +48,23 @@ export default function App() {
   const handleFile = useCallback((file: File) => {
     setError(null)
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
-        const parsed = JSON.parse(e.target?.result as string)
-        setData(parsed as TranscriptAnalysis)
+        const parsed = JSON.parse(e.target?.result as string) as TranscriptAnalysis
+
+        // Derive a title from the JSON metadata or fall back to the filename
+        const title = parsed.metadata?.title || file.name.replace(/\.json$/i, '')
+
+        // Persist to the backend — fire and forget; don't block viewing on save failure
+        fetch('/api/transcripts', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, data: parsed }),
+        }).catch(() => {/* ignore — transcript still loads locally */})
+
+        setData(parsed)
+        setView('dashboard')
       } catch {
         setError('Invalid JSON file. Please drop a valid transcript analysis file.')
       }
@@ -68,6 +85,7 @@ export default function App() {
   const handleReset = useCallback(() => {
     setData(null)
     setError(null)
+    setView('home')
   }, [])
 
   const handleLogout = useCallback(async () => {
@@ -75,7 +93,15 @@ export default function App() {
     setUser(null)
     setData(null)
     setError(null)
+    setView('home')
   }, [])
+
+  const handleOpenTranscript = useCallback((transcriptData: TranscriptAnalysis) => {
+    setData(transcriptData)
+    setView('dashboard')
+  }, [])
+
+  const commonProps = { theme, onToggleTheme: toggleTheme, user: user!, onLogout: handleLogout }
 
   // Blank screen while we check the session (avoids flash of login screen)
   if (!authChecked) return null
@@ -85,11 +111,27 @@ export default function App() {
     return <LoginScreen theme={theme} onToggleTheme={toggleTheme} />
   }
 
-  // Logged in, transcript loaded → dashboard
-  if (data) {
-    return <Dashboard data={data} onReset={handleReset} theme={theme} onToggleTheme={toggleTheme} user={user} onLogout={handleLogout} />
+  if (view === 'dashboard' && data) {
+    return <Dashboard data={data} onReset={handleReset} {...commonProps} />
   }
 
-  // Logged in, no transcript yet → drop zone
-  return <DropZone onDrop={handleDrop} onFile={handleFile} error={error} theme={theme} onToggleTheme={toggleTheme} user={user} onLogout={handleLogout} />
+  if (view === 'upload') {
+    return (
+      <DropZone
+        onDrop={handleDrop}
+        onFile={handleFile}
+        error={error}
+        onBack={() => { setError(null); setView('home') }}
+        {...commonProps}
+      />
+    )
+  }
+
+  return (
+    <HomePage
+      onOpen={handleOpenTranscript}
+      onUpload={() => setView('upload')}
+      {...commonProps}
+    />
+  )
 }
