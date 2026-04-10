@@ -258,6 +258,73 @@ early → early-mid → mid → mid-late → late
 
 ---
 
+## Transcription pipeline
+
+The `scripts/` directory contains `transcribe.py`, a Python script that downloads a YouTube video, transcribes it with NVIDIA Parakeet, and writes a structured `transcript.json` + plain-text `transcript.txt` to `scripts/output/<video-id>/`.
+
+### Setup
+
+```bash
+cd scripts
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Local usage
+
+```bash
+# Public video — no auth needed
+python transcribe.py https://www.youtube.com/watch?v=<id> --no-diarize
+
+# Age-restricted or sign-in-required — read cookies from your local Chrome
+python transcribe.py https://www.youtube.com/watch?v=<id> \
+    --cookies-from-browser chrome --no-diarize
+```
+
+> **macOS note:** The first time you use `--cookies-from-browser chrome`, macOS will
+> prompt for Keychain access (Chrome encrypts its cookies). Choose **Always Allow**
+> to avoid being asked on every run.
+
+### Headless server usage
+
+On a server there is no browser, so you need to push cookies from your local
+machine with `sync-cookies.sh`:
+
+**1. Configure the script** — open `scripts/sync-cookies.sh` and set `REMOTE_SERVER`
+to `user@your-server.com` (or export it as an env var).
+
+**2. Run it from your local machine** whenever cookies need refreshing:
+
+```bash
+cd scripts
+./sync-cookies.sh
+# or: REMOTE_SERVER=user@your-server.com ./sync-cookies.sh
+```
+
+This exports cookies from your local Chrome and copies them to
+`~/scripts/yt-cookies.txt` on the server.
+
+**3. On the server**, run transcribe.py pointing at the file:
+
+```bash
+python transcribe.py https://www.youtube.com/watch?v=<id> \
+    --cookies ~/scripts/yt-cookies.txt --no-diarize
+```
+
+Or set it once in your server's shell profile so you never need to pass the flag:
+
+```bash
+export YT_COOKIES_FILE=~/scripts/yt-cookies.txt
+```
+
+**When to refresh:** YouTube session cookies typically last 1–3 weeks. Refresh
+when you see 403 or sign-in-required errors. If errors recur within hours, the
+server IP may be flagged by YouTube's bot detection — cookie freshness alone
+won't solve that.
+
+---
+
 ## Tech stack
 
 - [Vite 5](https://vitejs.dev/) + [React 18](https://react.dev/) + TypeScript
