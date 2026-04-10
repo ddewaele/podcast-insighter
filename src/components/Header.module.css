@@ -90,26 +90,6 @@
   flex-shrink: 0;
 }
 
-.themeBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  color: var(--text-muted);
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.themeBtn:hover {
-  color: var(--text-secondary);
-  border-color: var(--border-hover);
-  background: var(--bg-subtle-hover);
-}
-
 .resetBtn {
   display: flex;
   align-items: center;

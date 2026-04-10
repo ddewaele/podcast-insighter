@@ -36,8 +36,8 @@ html {
   /* Accent (indigo) */
   --accent: #6366f1;
   --accent-light: #818cf8;
-  --accent-purple: #c4b5fd;
-  --accent-purple-hover: #a78bfa;
+  --accent-link: #c4b5fd;
+  --accent-link-hover: #a78bfa;
 
   /* Scrollbar */
   --scrollbar-track: #1a1d27;
@@ -70,8 +70,8 @@ html {
 
   --accent: #2563eb;
   --accent-light: #3b82f6;
-  --accent-purple: #1d4ed8;
-  --accent-purple-hover: #1e40af;
+  --accent-link: #1d4ed8;
+  --accent-link-hover: #1e40af;
 
   --scrollbar-track: #f1f5f9;
   --scrollbar-thumb: #cbd5e1;
