@@ -49,20 +49,29 @@ def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
 # Stage 1 — Download
 # ---------------------------------------------------------------------------
 
-def download_audio(url: str, out_dir: str, cookies_file: Optional[str] = None, js_runtime: Optional[str] = None) -> tuple[str, dict]:
+def download_audio(url: str, out_dir: str, cookies_file: Optional[str] = None, cookies_from_browser: Optional[str] = None, js_runtime: Optional[str] = None) -> tuple[str, dict]:
     """
     Download the best available audio stream from a YouTube URL.
 
     Args:
         cookies_file: Path to a Netscape-format cookies.txt file. Required when
                       YouTube demands bot verification on a headless server.
+        cookies_from_browser: Browser name to extract cookies from directly, e.g.
+                              'chrome', 'firefox', 'safari', 'edge'. Simpler than
+                              maintaining a cookies file — yt-dlp reads the browser's
+                              cookie store automatically.
 
     Returns:
         (path_to_audio_file, yt_dlp_video_info_dict)
     """
     log(f"[download] Fetching metadata for {url}")
 
-    cookies_args = ["--cookies", cookies_file] if cookies_file else []
+    if cookies_from_browser:
+        cookies_args = ["--cookies-from-browser", cookies_from_browser]
+    elif cookies_file:
+        cookies_args = ["--cookies", cookies_file]
+    else:
+        cookies_args = []
     # js_runtime: node/deno etc. — also fetch the remote EJS challenge solver from GitHub,
     # which yt-dlp no longer bundles but requires to decode YouTube's n-challenge URLs.
     js_args = ["--js-runtimes", js_runtime, "--remote-components", "ejs:github"] if js_runtime else []
@@ -428,7 +437,10 @@ Examples:
   # Basic — artifacts saved to ./output/We7BZVKbCVw/
   python transcribe.py https://www.youtube.com/watch?v=We7BZVKbCVw --no-diarize
 
-  # Headless server with cookies and JS runtime
+  # Use cookies from your local Chrome install (no plugin or file needed)
+  python transcribe.py https://youtu.be/XYZ --cookies-from-browser chrome --no-diarize
+
+  # Headless server with a cookies file and JS runtime
   python transcribe.py https://youtu.be/XYZ \\
     --cookies ~/yt-cookies.txt --js-runtime node --no-diarize
 
@@ -474,6 +486,11 @@ Examples:
         default=os.environ.get("YT_COOKIES_FILE"),
         metavar="PATH",
         help="Netscape cookies.txt for YouTube authentication (or set YT_COOKIES_FILE).")
+    parser.add_argument("--cookies-from-browser",
+        default=os.environ.get("YT_COOKIES_FROM_BROWSER"),
+        metavar="BROWSER",
+        help="Extract cookies directly from a browser, e.g. chrome, firefox, safari, edge "
+             "(or set YT_COOKIES_FROM_BROWSER). Takes precedence over --cookies.")
     parser.add_argument("--js-runtime",
         default=os.environ.get("YT_JS_RUNTIME"),
         metavar="RUNTIME",
@@ -546,6 +563,7 @@ Examples:
             raw_audio, video_info = download_audio(
                 args.url, tmp_dir,
                 cookies_file=args.cookies,
+                cookies_from_browser=args.cookies_from_browser,
                 js_runtime=args.js_runtime,
             )
             wav_path = convert_to_wav(raw_audio, tmp_dir)
