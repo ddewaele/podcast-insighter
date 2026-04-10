@@ -53,7 +53,11 @@ REMOTE_SERVER="${REMOTE_SERVER:-}"
 REMOTE_PATH="${REMOTE_PATH:-~/scripts/yt-cookies.txt}"
 
 # Temporary local path used during export (cleaned up on exit).
-LOCAL_TMP="$(mktemp /tmp/yt-cookies.XXXXXX.txt)"
+# Note: no suffix after XXXXXX — BSD/macOS mktemp requires X's at the end.
+# The empty file is removed immediately so yt-dlp can create it fresh
+# (yt-dlp rejects an existing empty file as "not Netscape format").
+LOCAL_TMP="$(mktemp /tmp/yt-cookies.XXXXXX)"
+rm -f "$LOCAL_TMP"
 
 # A public YouTube URL used to trigger the cookie export.
 # Any valid YouTube URL will do — the video is not downloaded.
