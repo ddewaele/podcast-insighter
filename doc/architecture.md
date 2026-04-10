@@ -255,22 +255,31 @@ GET /api/auth/me  →  { id, email, name, avatarUrl }
 
 Sessions are stored server-side (in-memory by default). The session ID is stored in an `httpOnly` cookie. The in-memory store is fine for single-instance deployments; for multi-instance add a `connect-redis` or `@fastify/session` Redis store.
 
+### Callback URL — dev vs production
+
+| Environment | `GOOGLE_CALLBACK_URL` | Why |
+|-------------|----------------------|-----|
+| Development | `http://localhost:5173/auth/google/callback` | Goes through the Vite proxy → Fastify. Cookie is set on port 5173 (same origin as the frontend), so subsequent API calls include it automatically. |
+| Production | `https://your-domain.com/auth/google/callback` | Fastify serves everything; there is no proxy. |
+
+> **Do not use port 3001 in the dev callback URL.** If you do, Google redirects the browser directly to Fastify (bypassing Vite). The session cookie is then set on `localhost:3001` instead of `localhost:5173`, creating a cross-origin cookie mismatch that is fragile and browser-dependent.
+
 ### Required environment variables
 
 ```env
 GOOGLE_CLIENT_ID=…          # From Google Cloud Console → OAuth 2.0 Client
 GOOGLE_CLIENT_SECRET=…
-GOOGLE_CALLBACK_URL=https://your-domain.com/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:5173/auth/google/callback  # dev
 SESSION_SECRET=…            # ≥ 32 random characters
-FRONTEND_URL=https://your-domain.com
+FRONTEND_URL=http://localhost:5173  # dev
 ```
 
 ### Google Cloud Console setup
 
 1. Create a project → **APIs & Services → Credentials → Create OAuth 2.0 Client ID**
 2. Application type: **Web application**
-3. Authorised redirect URIs:
-   - `http://localhost:3001/auth/google/callback` (development)
+3. Authorised redirect URIs — add both:
+   - `http://localhost:5173/auth/google/callback` (development, via Vite proxy)
    - `https://your-domain.com/auth/google/callback` (production)
 
 ---
