@@ -23,14 +23,16 @@ const TABS: { id: Tab; label: string; count?: (d: TranscriptAnalysis) => number 
 interface Props {
   data: TranscriptAnalysis
   onReset: () => void
+  theme: 'dark' | 'light'
+  onToggleTheme: () => void
 }
 
-export function Dashboard({ data, onReset }: Props) {
+export function Dashboard({ data, onReset, theme, onToggleTheme }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
   return (
     <div className={styles.layout}>
-      <Header data={data} onReset={onReset} />
+      <Header data={data} onReset={onReset} theme={theme} onToggleTheme={onToggleTheme} />
 
       <div className={styles.tabBar}>
         <div className={styles.tabList}>

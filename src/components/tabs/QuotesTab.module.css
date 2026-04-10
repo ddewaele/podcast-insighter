@@ -17,21 +17,21 @@
   padding: 0.375rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #64748b;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid #1e2133;
+  color: var(--text-muted);
+  background: var(--bg-subtle-sm);
+  border: 1px solid var(--border);
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .filterBtn:hover {
-  color: #94a3b8;
-  border-color: #2d3150;
+  color: var(--text-secondary);
+  border-color: var(--border-hover);
 }
 
 .filterBtn.active {
-  color: #818cf8;
+  color: var(--accent-light);
   background: rgba(99, 102, 241, 0.12);
   border-color: rgba(99, 102, 241, 0.3);
 }
@@ -50,11 +50,11 @@
 .card {
   display: flex;
   gap: 0;
-  background: #13161f;
-  border: 1px solid #1e2133;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.2s ease;
 }
 
 .card:hover {
@@ -77,7 +77,7 @@
 
 .text {
   font-size: 0.9375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1.65;
   font-style: italic;
 }
@@ -93,7 +93,7 @@
 .speaker {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #818cf8;
+  color: var(--accent-light);
 }
 
 .tags {
@@ -107,8 +107,8 @@
   font-weight: 500;
   padding: 0.175rem 0.5rem;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #64748b;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
   border: 1px solid transparent;
 }
 
@@ -157,10 +157,10 @@
 
 .context {
   font-size: 0.8125rem;
-  color: #475569;
+  color: var(--text-dim);
   line-height: 1.55;
   padding-top: 0.25rem;
-  border-top: 1px solid #1e2133;
+  border-top: 1px solid var(--border);
 }
 
 @media (max-width: 640px) {

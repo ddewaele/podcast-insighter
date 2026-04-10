@@ -5,10 +5,11 @@
 }
 
 .card {
-  background: #13161f;
-  border: 1px solid #1e2133;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .cardHeader {
@@ -16,13 +17,13 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1.125rem 1.5rem;
-  border-bottom: 1px solid #1e2133;
+  border-bottom: 1px solid var(--border);
 }
 
 .debateNum {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-dimmer);
   padding-top: 2px;
   flex-shrink: 0;
 }
@@ -30,7 +31,7 @@
 .topic {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1.45;
   flex: 1;
 }
@@ -75,13 +76,13 @@
 }
 
 .posA {
-  border-right: 1px solid #1e2133;
-  border-bottom: 1px solid #1e2133;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   background: rgba(99, 102, 241, 0.03);
 }
 
 .posB {
-  border-bottom: 1px solid #1e2133;
+  border-bottom: 1px solid var(--border);
   background: rgba(139, 92, 246, 0.02);
 }
 
@@ -94,12 +95,12 @@
 .speakerLabel {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #818cf8;
+  color: var(--accent-light);
 }
 
 .positionText {
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -108,7 +109,7 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-resolution);
 }
 
 .resolutionIcon {
@@ -126,7 +127,7 @@
 
 .resolutionText {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.6;
   font-style: italic;
 }
