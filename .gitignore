@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Analysis & transcript output (not committed for now)
+output/
+analysis/
+
+# Python virtual environment (scripts/)
+scripts/.venv/
+scripts/__pycache__/
+scripts/*.pyc
+
+# OS
+.DS_Store
+
+# Claude Code local settings (keep skills, ignore local config)
+.claude/settings.local.json
+
+# Editor
+.vscode/
+.idea/

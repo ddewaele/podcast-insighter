@@ -1,0 +1,106 @@
+.header {
+  background: #0f1117;
+  border-bottom: 1px solid #1e2133;
+  padding: 1.25rem 1.5rem;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.waveIcon {
+  width: 36px;
+  height: 36px;
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #1e2133;
+  padding: 0.25rem 0.625rem;
+  border-radius: 20px;
+}
+
+.speakers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.speaker {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.speaker::before {
+  content: '— ';
+  opacity: 0.5;
+}
+
+.resetBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #1e2133;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.resetBtn:hover {
+  color: #94a3b8;
+  border-color: #2d3150;
+  background: rgba(255, 255, 255, 0.06);
+}

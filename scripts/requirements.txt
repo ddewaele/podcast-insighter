@@ -1,0 +1,21 @@
+# ── ASR ──────────────────────────────────────────────────────────────────────
+# NeMo ASR toolkit — provides the NVIDIA Parakeet model loader.
+# Install BEFORE nemo_toolkit to avoid conflicting torch versions.
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# NeMo ASR extras only (avoids pulling in NLP/TTS which are very large)
+nemo_toolkit[asr]>=1.23.0
+
+# ── Speaker diarization ───────────────────────────────────────────────────────
+# pyannote.audio 3.x — used for the optional speaker diarization stage.
+# Requires accepting the model gate on HuggingFace before downloading weights.
+pyannote.audio>=3.1.0
+
+# ── Audio I/O ─────────────────────────────────────────────────────────────────
+soundfile>=0.12.1
+
+# ── YouTube download ──────────────────────────────────────────────────────────
+# yt-dlp can be installed as a Python package as well as a system binary.
+# Both work; the Python package keeps everything in the venv.
+yt-dlp>=2024.1.0
