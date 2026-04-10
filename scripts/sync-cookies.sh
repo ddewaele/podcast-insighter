@@ -30,11 +30,27 @@
 #   - On macOS: first run will prompt for Keychain access (Chrome cookie
 #     decryption). Choose "Always Allow" to avoid being prompted each time.
 #
+# SECURITY WARNING
+#   The exported cookies file grants full authenticated access to your YouTube
+#   account — treat it like a password. Anyone who obtains this file can act as
+#   you on YouTube (watch history, account details, etc.) until the session
+#   expires. With that in mind:
+#
+#   - The file is stored on the remote server with permissions 600 (owner
+#     read/write only). Do not loosen these.
+#   - Use a dedicated YouTube account for transcription, not your personal one,
+#     if the server is shared or not fully trusted.
+#   - scp transfers the file over an encrypted SSH connection, so it is safe in
+#     transit. The risk is at rest: on the server's filesystem.
+#   - Rotate cookies regularly (every 1–3 weeks) and revoke old sessions from
+#     Google's security settings if you suspect a leak:
+#     https://myaccount.google.com/security
+#
 # USAGE
 #   ./sync-cookies.sh
 #
 #   Override any setting via environment variable:
-#     BROWSER=firefox REMOTE_SERVER=me@other.host ./sync-cookies.sh
+#     BROWSER=firefox REMOTE_SERVER=me@other.host REMOTE_PATH=~/cookies.txt ./sync-cookies.sh
 # =============================================================================
 set -euo pipefail
 
@@ -79,6 +95,7 @@ error() { echo "[sync-cookies] ERROR: $*" >&2; exit 1; }
 
 command -v yt-dlp  >/dev/null 2>&1 || error "yt-dlp not found — install with: pip install yt-dlp"
 command -v scp     >/dev/null 2>&1 || error "scp not found"
+command -v ssh     >/dev/null 2>&1 || error "ssh not found"
 
 if [[ -z "$REMOTE_SERVER" ]]; then
     error "REMOTE_SERVER is not set. Edit the script or run:
@@ -111,9 +128,23 @@ info "Exported $COOKIE_COUNT YouTube cookies."
 # Step 2 — Push to remote server
 # -----------------------------------------------------------------------------
 
+# Ensure the remote directory exists before copying.
+REMOTE_DIR="$(dirname "$REMOTE_PATH")"
+info "Ensuring remote directory $REMOTE_DIR exists..."
+ssh "$REMOTE_SERVER" "mkdir -p $REMOTE_DIR"
+
 info "Copying to $REMOTE_SERVER:$REMOTE_PATH ..."
 scp "$LOCAL_TMP" "$REMOTE_SERVER:$REMOTE_PATH"
 
+# Restrict permissions: cookies grant full account access, owner-only read/write.
+info "Setting permissions to 600 on remote file..."
+ssh "$REMOTE_SERVER" "chmod 600 $REMOTE_PATH"
+
+info ""
+info "⚠  Security reminder: $REMOTE_PATH grants full YouTube account access."
+info "   Treat it like a password. Revoke old sessions at:"
+info "   https://myaccount.google.com/security"
+info ""
 info "Done. On the server, run transcribe.py with:"
 info "  python transcribe.py <url> --cookies $REMOTE_PATH --no-diarize"
 info ""
