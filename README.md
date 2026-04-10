@@ -88,20 +88,95 @@ This starts both the Fastify backend (`:3001`) and the Vite dev server (`:5173`)
 
 ## Deploying to Railway
 
-1. Create a new Railway project and connect this repository.
-2. Add the **Postgres** plugin — Railway injects `DATABASE_URL` automatically.
-3. Set the remaining environment variables:
+### Overview
+
+The app is deployed as a single Docker container (Fastify serves both the API and the built Vite frontend). Postgres runs as a separate Railway service on the private network — it is never exposed publicly.
+
+On every deploy the container runs `prisma migrate deploy` before starting the server, so database schema changes are applied automatically.
+
+---
+
+### Step 1 — Create the project and add Postgres
+
+Create a new Railway project, connect this repository, then add a Postgres database. The Railway CLI is the fastest way:
+
+```bash
+npm install -g @railway/cli
+railway login
+railway link        # select your project
+railway add --plugin postgresql
+```
+
+This provisions Postgres on Railway's **private network** — it has no public endpoint.
+
+---
+
+### Step 2 — Generate a domain
+
+In your app service → **Settings → Networking**, click **Generate Domain**. This gives you your public URL (`https://<name>.up.railway.app`), which you need before you can fill in the OAuth variables.
+
+![Railway Networking panel](public/screenshots/railway/networking-port.png)
+
+> The "Failed to get private network endpoint" message shown for the app service is expected and can be ignored — only the Postgres service needs a private endpoint.
+>
+> ![Private network error](public/screenshots/railway/networking.png)
+
+---
+
+### Step 3 — Set environment variables
+
+Railway will suggest variables it detects from your source code, but the suggested values are placeholder defaults from `.env.example` — **do not use them as-is**.
+
+![Railway suggested variables](public/screenshots/railway/variables.png)
+
+Set these values in the **Raw Editor** (faster than filling individual fields):
 
 | Variable | Value |
 |---|---|
-| `GOOGLE_CLIENT_ID` | Your OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Your OAuth client secret |
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `GOOGLE_CLIENT_ID` | Your real OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Your real OAuth client secret |
 | `GOOGLE_CALLBACK_URL` | `https://<your-railway-domain>/auth/google/callback` |
 | `FRONTEND_URL` | `https://<your-railway-domain>` |
-| `SESSION_SECRET` | A random 32+ character string |
+| `SESSION_SECRET` | Output of: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 
-4. Add `https://<your-railway-domain>/auth/google/callback` as an authorised redirect URI in Google Cloud Console.
-5. Deploy. The Dockerfile runs `prisma migrate deploy` on startup, so the database tables are created automatically on the first boot.
+`${{Postgres.DATABASE_URL}}` is Railway's service reference syntax — it resolves to the **internal** Postgres URL at runtime, keeping the database on the private network.
+
+Do **not** manually set `PORT` or `HOST` — Railway injects `PORT` automatically and your server reads it.
+
+---
+
+### Step 4 — Add the callback URL to Google Cloud Console
+
+In [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials → your OAuth client → **Authorised redirect URIs**, add:
+
+```
+https://<your-railway-domain>/auth/google/callback
+```
+
+---
+
+### Step 5 — Deploy and verify
+
+Trigger a deploy. Check the **Deploy Logs** tab — a successful first boot looks like:
+
+![Deploy logs showing successful migration and server start](public/screenshots/railway/deploy-logs.png)
+
+Key lines to look for:
+- `All migrations have been successfully applied` — Postgres schema is initialised
+- `Server running at http://localhost:<PORT>` — note the port Railway assigned
+
+---
+
+### Gotcha: port mismatch
+
+Railway injects a `PORT` environment variable at runtime (typically `8080`). The server reads it correctly via `process.env.PORT ?? 3001`. However, when you first set up the domain in the Networking panel Railway may default to showing port `3001`.
+
+If you see **"Application failed to respond"**:
+
+![Application failed to respond](public/screenshots/railway/failed-to-respond.png)
+
+Go to **Settings → Networking**, click the edit icon next to your domain, and update the port to match what the deploy logs show (e.g. `8080`). Railway's injected `PORT` is the source of truth — do not override it with a fixed value in the Variables panel.
 
 ---
 
