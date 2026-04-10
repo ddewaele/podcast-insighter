@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id
+  googleId  String   @unique @map("google_id")
+  email     String   @unique
+  name      String
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  transcripts Transcript[]
+  jobs        Job[]
+
+  @@map("users")
+}
+
+model Transcript {
+  id           String   @id
+  userId       String   @map("user_id")
+  title        String
+  youtubeUrl   String?  @map("youtube_url")
+  videoId      String?  @map("video_id")
+  status       String   @default("ready")
+  isPublic     Boolean  @default(false) @map("is_public")
+  jsonData     String?  @map("json_data")
+  errorMessage String?  @map("error_message")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs Job[]
+
+  @@map("transcripts")
+}
+
+model Job {
+  id           String      @id
+  transcriptId String?     @map("transcript_id")
+  userId       String      @map("user_id")
+  youtubeUrl   String      @map("youtube_url")
+  status       String      @default("queued")
+  progress     Int         @default(0)
+  detail       String?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  transcript Transcript? @relation(fields: [transcriptId], references: [id], onDelete: SetNull)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("jobs")
+}

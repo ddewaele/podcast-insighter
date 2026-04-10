@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Theme, TranscriptAnalysis } from '../types'
+import type { Theme, TranscriptAnalysis, User } from '../types'
 import { Header } from './Header'
 import { OverviewTab } from './tabs/OverviewTab'
 import { QuotesTab } from './tabs/QuotesTab'
@@ -25,14 +25,16 @@ interface Props {
   onReset: () => void
   theme: Theme
   onToggleTheme: () => void
+  user: User
+  onLogout: () => void
 }
 
-export function Dashboard({ data, onReset, theme, onToggleTheme }: Props) {
+export function Dashboard({ data, onReset, theme, onToggleTheme, user, onLogout }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
   return (
     <div className={styles.layout}>
-      <Header data={data} onReset={onReset} theme={theme} onToggleTheme={onToggleTheme} />
+      <Header data={data} onReset={onReset} theme={theme} onToggleTheme={onToggleTheme} user={user} onLogout={onLogout} />
 
       <div className={styles.tabBar}>
         <div className={styles.tabList}>

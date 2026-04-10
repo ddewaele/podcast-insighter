@@ -1,5 +1,12 @@
 export type Theme = 'dark' | 'light'
 
+export interface User {
+  id: string
+  email: string
+  name: string
+  avatarUrl: string | null
+}
+
 export interface TranscriptMetadata {
   title: string;
   speakers: string[];
@@ -57,6 +64,21 @@ export interface TopicSegment {
   approximate_position: TopicPosition;
   topic: string;
   summary: string;
+}
+
+export interface TranscriptListItem {
+  id: string
+  userId: string
+  title: string
+  youtubeUrl: string | null
+  videoId: string | null
+  status: 'pending' | 'processing' | 'ready' | 'failed'
+  isPublic: boolean
+  hasData: boolean
+  createdAt: string
+  updatedAt: string
+  isOwner: boolean
+  owner: { id: string; name: string; avatarUrl: string | null }
 }
 
 export interface TranscriptAnalysis {

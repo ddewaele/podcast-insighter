@@ -1,0 +1,14 @@
+node_modules
+dist
+data
+output
+.env
+.git
+.gitignore
+scripts/.venv
+scripts/__pycache__
+*.pyc
+*.db
+*.db-shm
+*.db-wal
+public/screenshots

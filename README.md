@@ -1,8 +1,6 @@
 # TranscriberUI
 
-A Vite + React frontend for visualizing structured podcast transcript analysis. Drop a JSON file in — no backend required.
-
-**Dev server:** `npm run dev` → http://localhost:5173
+A full-stack app for generating and exploring structured podcast transcript analysis. Submit a YouTube URL to transcribe and analyse a podcast, or upload an existing analysis JSON. Built with Vite + React on the frontend and Fastify + Prisma + PostgreSQL on the backend.
 
 ---
 
@@ -38,12 +36,72 @@ A Vite + React frontend for visualizing structured podcast transcript analysis. 
 
 ## Getting started
 
+### 1. Clone and install
+
 ```bash
+git clone https://github.com/ddewaele/podcast-insighter.git
+cd podcast-insighter
 npm install
-npm run dev
 ```
 
-Then open http://localhost:5180, drag your `transcript_analysis.json` onto the drop zone, and explore.
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in:
+
+| Variable | Where to get it |
+|---|---|
+| `GOOGLE_CLIENT_ID` | [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials |
+| `GOOGLE_CLIENT_SECRET` | Same OAuth client |
+| `SESSION_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+
+Add `http://localhost:5173/auth/google/callback` as an authorised redirect URI on your Google OAuth client.
+
+### 3. Start the database
+
+The app uses PostgreSQL. The easiest way to run one locally is via Docker Compose:
+
+```bash
+docker compose up postgres -d
+```
+
+This starts a `postgres:16` container with the credentials already set in `.env.example` (`transcriber / transcriber`).
+
+### 4. Initialise the schema
+
+```bash
+npm run db:push
+```
+
+### 5. Start the app
+
+```bash
+npm run dev:all
+```
+
+This starts both the Fastify backend (`:3001`) and the Vite dev server (`:5173`) together. Open http://localhost:5173.
+
+---
+
+## Deploying to Railway
+
+1. Create a new Railway project and connect this repository.
+2. Add the **Postgres** plugin — Railway injects `DATABASE_URL` automatically.
+3. Set the remaining environment variables:
+
+| Variable | Value |
+|---|---|
+| `GOOGLE_CLIENT_ID` | Your OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Your OAuth client secret |
+| `GOOGLE_CALLBACK_URL` | `https://<your-railway-domain>/auth/google/callback` |
+| `FRONTEND_URL` | `https://<your-railway-domain>` |
+| `SESSION_SECRET` | A random 32+ character string |
+
+4. Add `https://<your-railway-domain>/auth/google/callback` as an authorised redirect URI in Google Cloud Console.
+5. Deploy. The Dockerfile runs `prisma migrate deploy` on startup, so the database tables are created automatically on the first boot.
 
 ---
 
@@ -355,8 +413,60 @@ won't solve that.
 
 ---
 
+## Database
+
+The backend uses PostgreSQL via Prisma. Schema is in `prisma/schema.prisma`.
+
+### Tables
+
+| Table | Purpose |
+|-------|---------|
+| `users` | Google OAuth accounts |
+| `transcripts` | Uploaded/generated analyses with visibility and status |
+| `jobs` | Background pipeline jobs and their progress |
+
+### Accessing the database
+
+**Prisma Studio** (visual GUI, works with any `DATABASE_URL`):
+
+```bash
+npm run db:studio   # opens at http://localhost:5555
+```
+
+**psql** (local dev container):
+
+```bash
+docker compose exec postgres psql -U transcriber transcriber
+```
+
+Useful queries:
+
+```sql
+-- List all users
+SELECT id, email, name, created_at FROM users;
+
+-- List all transcripts with owner name
+SELECT t.id, t.title, t.status, t.is_public, u.email, t.created_at
+FROM transcripts t JOIN users u ON t.user_id = u.id
+ORDER BY t.created_at DESC;
+
+-- List all jobs
+SELECT id, youtube_url, status, progress, created_at FROM jobs ORDER BY created_at DESC;
+```
+
+**GUI clients** — TablePlus and DBeaver both support PostgreSQL. Connect with `postgresql://transcriber:transcriber@localhost:5432/transcriber` for local dev.
+
+---
+
 ## Tech stack
 
+**Frontend**
 - [Vite 5](https://vitejs.dev/) + [React 18](https://react.dev/) + TypeScript
 - CSS Modules — no external CSS framework
-- No router, no backend — purely client-side
+- No client-side router — view state machine in `App.tsx`
+
+**Backend**
+- [Fastify](https://fastify.dev/) — HTTP server
+- [Prisma](https://www.prisma.io/) — ORM
+- PostgreSQL — database (local via Docker, production via Railway Postgres plugin)
+- Google OAuth2 via `@fastify/oauth2`, server-side sessions via `@fastify/session`

@@ -111,3 +111,10 @@
   border-color: var(--border-hover);
   background: var(--bg-subtle-hover);
 }
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}

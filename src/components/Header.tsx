@@ -1,5 +1,6 @@
-import type { Theme, TranscriptAnalysis } from '../types'
+import type { Theme, TranscriptAnalysis, User } from '../types'
 import { ThemeToggle } from './ThemeToggle'
+import { UserMenu } from './UserMenu'
 import styles from './Header.module.css'
 
 interface Props {
@@ -7,9 +8,11 @@ interface Props {
   onReset: () => void
   theme: Theme
   onToggleTheme: () => void
+  user: User
+  onLogout: () => void
 }
 
-export function Header({ data, onReset, theme, onToggleTheme }: Props) {
+export function Header({ data, onReset, theme, onToggleTheme, user, onLogout }: Props) {
   const { metadata } = data
 
   return (
@@ -55,13 +58,15 @@ export function Header({ data, onReset, theme, onToggleTheme }: Props) {
         <div className={styles.actions}>
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
 
-          <button className={styles.resetBtn} onClick={onReset} title="Load a different file">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
-              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+          <button className={styles.resetBtn} onClick={onReset} title="Back to transcript list">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 3L5 8l5 5" />
             </svg>
-            Load new file
+            My Transcripts
           </button>
+
+          <div className={styles.divider} />
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
     </header>

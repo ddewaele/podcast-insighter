@@ -1,6 +1,8 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
-import type { Theme } from '../types'
+import type { Theme, User } from '../types'
 import { ThemeToggle } from './ThemeToggle'
+import { UserMenu } from './UserMenu'
+import { WaveformIconSmall } from './icons'
 import styles from './DropZone.module.css'
 
 interface Props {
@@ -9,6 +11,9 @@ interface Props {
   error: string | null
   theme: Theme
   onToggleTheme: () => void
+  user: User
+  onLogout: () => void
+  onBack: () => void
 }
 
 const FEATURES = [
@@ -18,7 +23,7 @@ const FEATURES = [
   { icon: '⚡', label: 'Topic timeline' },
 ]
 
-export function DropZone({ onDrop, onFile, error, theme, onToggleTheme }: Props) {
+export function DropZone({ onDrop, onFile, error, theme, onToggleTheme, user, onLogout, onBack }: Props) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -41,9 +46,19 @@ export function DropZone({ onDrop, onFile, error, theme, onToggleTheme }: Props)
 
   return (
     <div className={styles.page}>
-      <div className={styles.themeBtn}>
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-      </div>
+      <nav className={styles.topBar}>
+        <div className={styles.topBarBrand}>
+          <button className={styles.backBtn} onClick={onBack} aria-label="Back to home">
+            <BackIcon />
+          </button>
+          <WaveformIconSmall />
+          <span className={styles.topBarTitle}>Podcast Insighter</span>
+        </div>
+        <div className={styles.topBarActions}>
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <UserMenu user={user} onLogout={onLogout} />
+        </div>
+      </nav>
 
       <div className={styles.hero}>
         <div className={styles.logoMark}>
@@ -89,6 +104,14 @@ export function DropZone({ onDrop, onFile, error, theme, onToggleTheme }: Props)
         </div>
       </div>
     </div>
+  )
+}
+
+function BackIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 3L5 8l5 5" />
+    </svg>
   )
 }
 
