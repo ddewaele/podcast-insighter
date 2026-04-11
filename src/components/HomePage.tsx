@@ -139,6 +139,26 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
     setSubmitError(null)
   }
 
+  // ── Search ───────────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Array<TranscriptListItem & { match: { matchType: string; snippet: string } | null }> | null>(null)
+  const [searching, setSearching] = useState(false)
+
+  useEffect(() => {
+    const q = searchQuery.trim()
+    if (q.length < 2) { setSearchResults(null); return }
+    const timer = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const r = await fetch(`/api/transcripts/search?q=${encodeURIComponent(q)}`, { credentials: 'include' })
+        if (r.ok) setSearchResults(await r.json())
+      } finally {
+        setSearching(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   // ── Export / Import ──────────────────────────────────────────────────
   const [showDataMenu, setShowDataMenu] = useState(false)
   const [includePublic, setIncludePublic] = useState(false)
@@ -275,6 +295,51 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
             </div>
           )}
         </div>
+
+        {/* Search bar */}
+        <div className={styles.searchBar}>
+          <span className={styles.searchIcon}>
+            <SearchIcon />
+          </span>
+          <input
+            className={styles.searchInput}
+            type="search"
+            placeholder="Search transcripts, quotes, insights…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className={styles.searchClear} onClick={() => setSearchQuery('')} title="Clear search">×</button>
+          )}
+        </div>
+
+        {/* Search results */}
+        {searchQuery.trim().length >= 2 && (
+          <div className={styles.searchResults}>
+            {searching && <div className={styles.searchEmpty}>Searching…</div>}
+            {!searching && searchResults?.length === 0 && (
+              <div className={styles.searchEmpty}>No results for "{searchQuery}"</div>
+            )}
+            {!searching && searchResults && searchResults.length > 0 && searchResults.map(r => (
+              <button
+                key={r.id}
+                className={styles.searchResultItem}
+                onClick={() => handleOpen(r.id)}
+                disabled={!r.hasData || r.status !== 'ready'}
+              >
+                <div className={styles.searchResultTitle}>{r.title}</div>
+                {r.match && (
+                  <>
+                    <div className={styles.searchResultType}>{r.match.matchType}</div>
+                    {r.match.snippet && (
+                      <div className={styles.searchResultMatch}>"{r.match.snippet.slice(0, 120)}{r.match.snippet.length > 120 ? '…' : ''}"</div>
+                    )}
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Generate panel */}
         {showPanel && (
@@ -591,6 +656,15 @@ function ImportIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 10V3M8 3L5 6M8 3l3 3" />
       <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
+    </svg>
+  )
+}
+
+function SearchIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6.5" cy="6.5" r="4.5" />
+      <path d="M10 10l3.5 3.5" />
     </svg>
   )
 }
