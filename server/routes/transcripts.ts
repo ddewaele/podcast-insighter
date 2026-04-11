@@ -23,7 +23,64 @@ function serializeTranscript(t: TranscriptWithUser, userId: string) {
   }
 }
 
+// Extract a short snippet from json_data showing where the query matched
+function extractSnippet(jsonData: string, q: string): { matchType: string; snippet: string } | null {
+  let parsed: Record<string, unknown>
+  try { parsed = JSON.parse(jsonData) } catch { return null }
+
+  const lower = q.toLowerCase()
+
+  const summary = parsed.summary as { one_liner?: string; executive_summary?: string; key_takeaways?: string[] } | undefined
+  if (summary?.one_liner?.toLowerCase().includes(lower))
+    return { matchType: 'Summary', snippet: summary.one_liner! }
+
+  const quotes = parsed.quotes as Array<{ text: string; speaker: string }> | undefined
+  const matchedQuote = quotes?.find(quote => quote.text.toLowerCase().includes(lower))
+  if (matchedQuote)
+    return { matchType: `Quote — ${matchedQuote.speaker}`, snippet: matchedQuote.text }
+
+  const insights = parsed.insights as Array<{ claim: string; speaker: string }> | undefined
+  const matchedInsight = insights?.find(i => i.claim.toLowerCase().includes(lower))
+  if (matchedInsight)
+    return { matchType: `Insight — ${matchedInsight.speaker}`, snippet: matchedInsight.claim }
+
+  const references = parsed.references as Array<{ name: string; context: string }> | undefined
+  const matchedRef = references?.find(r => r.name.toLowerCase().includes(lower) || r.context.toLowerCase().includes(lower))
+  if (matchedRef)
+    return { matchType: 'Reference', snippet: matchedRef.name }
+
+  return { matchType: 'Content', snippet: '' }
+}
+
 export async function transcriptRoutes(app: FastifyInstance) {
+  // GET /api/transcripts/search?q=<query> — full-text search across own + public transcripts
+  // Registered before /:id so Fastify doesn't match "search" as a param
+  app.get<{ Querystring: { q?: string } }>('/api/transcripts/search', { preHandler: requireAuth }, async (request, reply) => {
+    const userId = request.session.get('userId')!
+    const q = (request.query.q ?? '').trim()
+    if (!q || q.length < 2) return reply.status(400).send({ error: 'Query must be at least 2 characters' })
+
+    const transcripts = await prisma.transcript.findMany({
+      where: {
+        OR: [{ userId }, { isPublic: true }],
+        AND: {
+          OR: [
+            { title: { contains: q, mode: 'insensitive' } },
+            { jsonData: { contains: q, mode: 'insensitive' } },
+          ],
+        },
+      },
+      include: { user: true },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    })
+
+    return transcripts.map(t => ({
+      ...serializeTranscript(t, userId),
+      match: t.jsonData ? extractSnippet(t.jsonData, q) : null,
+    }))
+  })
+
   // GET /api/transcripts/export — export all own transcripts (+ optionally public) as JSON
   // Registered before /:id so Fastify doesn't match "export" as a param
   app.get<{ Querystring: { includePublic?: string } }>('/api/transcripts/export', { preHandler: requireAuth }, async (request) => {
