@@ -27,6 +27,11 @@ data/*.db-wal
 # Claude Code local settings (keep skills, ignore local config)
 .claude/settings.local.json
 
+# Playwright
+tests/.auth/
+test-results/
+playwright-report/
+
 # Editor
 .vscode/
 .idea/
