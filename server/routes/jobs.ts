@@ -3,6 +3,9 @@ import { v4 as uuid } from 'uuid'
 import { prisma } from '../db.js'
 import { requireAuth } from '../middleware.js'
 import { runFakePipeline } from '../pipeline/fake.js'
+import { runPipeline } from '../pipeline/real.js'
+
+const useRealPipeline = !!process.env.ANTHROPIC_API_KEY
 
 const subscribers = new Map<string, Array<(data: string) => void>>()
 const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' }
@@ -15,7 +18,7 @@ function broadcast(jobId: string, payload: object) {
 }
 
 export async function jobRoutes(app: FastifyInstance) {
-  // POST /api/jobs — submit a YouTube URL, start the fake pipeline
+  // POST /api/jobs — submit a YouTube URL, start the pipeline
   app.post<{ Body: { youtubeUrl: string } }>('/api/jobs', { preHandler: requireAuth }, async (request, reply) => {
     const userId = request.session.get('userId')!
     const { youtubeUrl } = request.body
@@ -39,7 +42,8 @@ export async function jobRoutes(app: FastifyInstance) {
     const jobId = uuid()
     await prisma.job.create({ data: { id: jobId, userId, youtubeUrl } })
 
-    runFakePipeline(jobId, transcriptId, youtubeUrl, (status, pct, detail) => {
+    const run = useRealPipeline ? runPipeline : runFakePipeline
+    run(jobId, transcriptId, youtubeUrl, (status, pct, detail) => {
       broadcast(jobId, { stage: status, pct, detail })
       if (status === 'done' || status === 'error') subscribers.delete(jobId)
     }).catch(err => app.log.error(err))

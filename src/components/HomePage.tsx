@@ -21,11 +21,10 @@ type GenerateState =
   | { kind: 'done'; transcriptId: string }
   | { kind: 'error'; message: string }
 
-const STAGES = ['downloading', 'transcribing', 'processing', 'done'] as const
+const STAGES = ['downloading', 'analyzing', 'done'] as const
 const STAGE_LABELS: Record<string, string> = {
-  downloading: 'Downloading',
-  transcribing: 'Transcribing',
-  processing: 'Processing',
+  downloading: 'Fetching captions',
+  analyzing: 'Analyzing',
   done: 'Done',
 }
 
