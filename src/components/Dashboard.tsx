@@ -7,9 +7,10 @@ import { InsightsTab } from './tabs/InsightsTab'
 import { ReferencesTab } from './tabs/ReferencesTab'
 import { DisagreementsTab } from './tabs/DisagreementsTab'
 import { TimelineTab } from './tabs/TimelineTab'
+import { CommentsTab } from './tabs/CommentsTab'
 import styles from './Dashboard.module.css'
 
-type Tab = 'overview' | 'timeline' | 'quotes' | 'insights' | 'references' | 'disagreements'
+type Tab = 'overview' | 'timeline' | 'quotes' | 'insights' | 'references' | 'disagreements' | 'comments'
 
 const TABS: { id: Tab; label: string; count?: (d: TranscriptAnalysis) => number }[] = [
   { id: 'overview', label: 'Overview' },
@@ -18,10 +19,12 @@ const TABS: { id: Tab; label: string; count?: (d: TranscriptAnalysis) => number 
   { id: 'insights', label: 'Insights', count: (d) => d.insights.length },
   { id: 'references', label: 'References', count: (d) => d.references.length },
   { id: 'disagreements', label: 'Debates', count: (d) => d.disagreements_and_nuance.length },
+  { id: 'comments', label: 'Comments' },
 ]
 
 interface Props {
   data: TranscriptAnalysis
+  transcriptId: string | null
   onReset: () => void
   theme: Theme
   onToggleTheme: () => void
@@ -29,7 +32,7 @@ interface Props {
   onLogout: () => void
 }
 
-export function Dashboard({ data, onReset, theme, onToggleTheme, user, onLogout }: Props) {
+export function Dashboard({ data, transcriptId, onReset, theme, onToggleTheme, user, onLogout }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
   return (
@@ -60,6 +63,7 @@ export function Dashboard({ data, onReset, theme, onToggleTheme, user, onLogout 
         {activeTab === 'insights' && <InsightsTab insights={data.insights} />}
         {activeTab === 'references' && <ReferencesTab references={data.references} />}
         {activeTab === 'disagreements' && <DisagreementsTab disagreements={data.disagreements_and_nuance} />}
+        {activeTab === 'comments' && <CommentsTab transcriptId={transcriptId} user={user} />}
       </main>
     </div>
   )
