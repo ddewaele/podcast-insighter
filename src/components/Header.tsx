@@ -1,6 +1,7 @@
 import type { Theme, TranscriptAnalysis, User } from '../types'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
+import { downloadMarkdown } from '../utils/markdownExport'
 import styles from './Header.module.css'
 
 interface Props {
@@ -57,6 +58,18 @@ export function Header({ data, onReset, theme, onToggleTheme, user, onLogout }: 
 
         <div className={styles.actions}>
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+
+          <button
+            className={styles.resetBtn}
+            onClick={() => downloadMarkdown(data)}
+            title="Export as Markdown"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 10V3M8 10L5 7M8 10l3-3" />
+              <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
+            </svg>
+            Export .md
+          </button>
 
           <button className={styles.resetBtn} onClick={onReset} title="Back to transcript list">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
