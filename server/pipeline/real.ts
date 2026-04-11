@@ -34,13 +34,30 @@ export async function runPipeline(
       `Captions fetched (${transcript.wordCount.toLocaleString()} words)`)
 
     // ── Stage 2: Analyze with Claude ────────────────────────────────────
-    await updateJob('analyzing', 30, 'Sending transcript to Claude for analysis…')
-
     const model = process.env.CLAUDE_MODEL ?? 'claude-sonnet-4-6'
-    const result = await analyzeTranscript(transcript.fullText, model)
+    const wordCount = transcript.wordCount.toLocaleString()
+    const estimateMin = Math.max(1, Math.round(transcript.wordCount / 5000))
+    const estimateMax = estimateMin + 1
+    await updateJob('analyzing', 30,
+      `Sending ${wordCount} words to Claude (${model}) — this typically takes ${estimateMin}–${estimateMax} minutes…`)
+
+    // Tick progress while waiting so the user sees movement
+    let pct = 30
+    const ticker = setInterval(async () => {
+      pct = Math.min(pct + 5, 85)
+      await updateJob('analyzing', pct,
+        `Claude is analyzing the transcript… (${pct}%)`)
+    }, 15_000)
+
+    let result
+    try {
+      result = await analyzeTranscript(transcript.fullText, model)
+    } finally {
+      clearInterval(ticker)
+    }
 
     await updateJob('analyzing', 90,
-      `Analysis complete (${result.inputTokens} input, ${result.outputTokens} output tokens)`)
+      `Analysis complete (${result.inputTokens.toLocaleString()} input, ${result.outputTokens.toLocaleString()} output tokens)`)
 
     // ── Stage 3: Store result ───────────────────────────────────────────
     const analysis = result.data as Record<string, unknown>
