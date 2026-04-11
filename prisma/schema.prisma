@@ -17,6 +17,7 @@ model User {
 
   transcripts Transcript[]
   jobs        Job[]
+  bookmarks   Bookmark[]
 
   @@map("users")
 }
@@ -34,10 +35,26 @@ model Transcript {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobs Job[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs      Job[]
+  bookmarks Bookmark[]
 
   @@map("transcripts")
+}
+
+model Bookmark {
+  id           String     @id
+  userId       String     @map("user_id")
+  transcriptId String     @map("transcript_id")
+  itemType     String     @map("item_type") // quote | insight | reference
+  itemId       String     @map("item_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcript   Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, transcriptId, itemType, itemId])
+  @@map("bookmarks")
 }
 
 model Job {

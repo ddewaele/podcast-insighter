@@ -10,7 +10,7 @@ interface Props {
   onToggleTheme: () => void
   user: User
   onLogout: () => void
-  onOpen: (data: TranscriptAnalysis) => void
+  onOpen: (data: TranscriptAnalysis, id?: string) => void
   onUpload: () => void
 }
 
@@ -112,7 +112,7 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
       if (!r.ok) throw new Error('Failed to load transcript')
       const item = await r.json()
       if (!item.data) throw new Error('no-data')
-      onOpen(item.data as TranscriptAnalysis)
+      onOpen(item.data as TranscriptAnalysis, id)
     } catch (err) {
       setOpening(null)
       if (err instanceof Error && err.message === 'no-data') {

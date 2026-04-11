@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { Insight } from '../../types'
+import { BookmarkButton } from '../BookmarkButton'
 import styles from './InsightsTab.module.css'
 
 interface Props {
@@ -97,6 +98,7 @@ function InsightCard({ insight }: { insight: Insight }) {
             <span key={tag} className={styles.tag}>{tag}</span>
           ))}
         </div>
+        <BookmarkButton itemType="insight" itemId={insight.id} />
       </div>
       <p className={styles.claim}>{insight.claim}</p>
       <p className={styles.detail}>{insight.supporting_detail}</p>

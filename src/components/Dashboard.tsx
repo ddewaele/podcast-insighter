@@ -7,6 +7,7 @@ import { InsightsTab } from './tabs/InsightsTab'
 import { ReferencesTab } from './tabs/ReferencesTab'
 import { DisagreementsTab } from './tabs/DisagreementsTab'
 import { TimelineTab } from './tabs/TimelineTab'
+import { BookmarksProvider } from './BookmarksContext'
 import styles from './Dashboard.module.css'
 
 type Tab = 'overview' | 'timeline' | 'quotes' | 'insights' | 'references' | 'disagreements'
@@ -22,6 +23,7 @@ const TABS: { id: Tab; label: string; count?: (d: TranscriptAnalysis) => number 
 
 interface Props {
   data: TranscriptAnalysis
+  transcriptId: string | null
   onReset: () => void
   theme: Theme
   onToggleTheme: () => void
@@ -29,10 +31,11 @@ interface Props {
   onLogout: () => void
 }
 
-export function Dashboard({ data, onReset, theme, onToggleTheme, user, onLogout }: Props) {
+export function Dashboard({ data, transcriptId, onReset, theme, onToggleTheme, user, onLogout }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
   return (
+    <BookmarksProvider transcriptId={transcriptId}>
     <div className={styles.layout}>
       <Header data={data} onReset={onReset} theme={theme} onToggleTheme={onToggleTheme} user={user} onLogout={onLogout} />
 
@@ -62,5 +65,6 @@ export function Dashboard({ data, onReset, theme, onToggleTheme, user, onLogout 
         {activeTab === 'disagreements' && <DisagreementsTab disagreements={data.disagreements_and_nuance} />}
       </main>
     </div>
+    </BookmarksProvider>
   )
 }

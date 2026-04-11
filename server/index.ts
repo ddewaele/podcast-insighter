@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url'
 import { authRoutes } from './routes/auth.js'
 import { transcriptRoutes } from './routes/transcripts.js'
 import { jobRoutes } from './routes/jobs.js'
+import { bookmarkRoutes } from './routes/bookmarks.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const isProd = process.env.NODE_ENV === 'production'
@@ -66,6 +67,7 @@ await app.register(oauthPlugin, {
 await app.register(authRoutes)
 await app.register(transcriptRoutes)
 await app.register(jobRoutes)
+await app.register(bookmarkRoutes)
 
 // Health check
 app.get('/api/health', async () => ({ ok: true }))
