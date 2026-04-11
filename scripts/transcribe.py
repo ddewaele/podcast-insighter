@@ -504,11 +504,30 @@ Examples:
         type=float,
         default=0.8,
         help="Silence gap in seconds that starts a new segment (default: 0.8).")
+    parser.add_argument("--analyze",
+        action="store_true",
+        help="After transcription, run LLM analysis to produce transcript_analysis.json. "
+             "Requires ANTHROPIC_API_KEY environment variable.")
+    parser.add_argument("--analyze-model",
+        default=os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6"),
+        help="Claude model for the analysis stage (default: claude-sonnet-4-6, or set CLAUDE_MODEL).")
 
     args = parser.parse_args()
 
     if not args.url and not args.audio_file:
         parser.error("provide a YouTube URL or --audio-file PATH")
+
+    # ── Decode base64-encoded cookies if provided via env var ───────────────
+    if not args.cookies and os.environ.get("YT_COOKIES_BASE64"):
+        import base64, tempfile as _tf
+        cookies_bytes = base64.b64decode(os.environ["YT_COOKIES_BASE64"])
+        _cookies_tmp = _tf.NamedTemporaryFile(
+            prefix="yt_cookies_", suffix=".txt", delete=False, mode="wb"
+        )
+        _cookies_tmp.write(cookies_bytes)
+        _cookies_tmp.close()
+        args.cookies = _cookies_tmp.name
+        log(f"[cookies] Decoded YT_COOKIES_BASE64 → {args.cookies}")
 
     if not args.no_diarize and not args.hf_token:
         log("Warning: no HuggingFace token found — skipping diarization.")
@@ -613,6 +632,23 @@ Examples:
             if not cached_wav.exists():
                 shutil.copy(wav_path, cached_wav)
             log(f"[done] audio kept     → {artifact_dir}")
+
+        # ── Stage 5: LLM Analysis (optional) ────────────────────────────────
+        if args.analyze:
+            if not os.environ.get("ANTHROPIC_API_KEY"):
+                log("Warning: --analyze requires ANTHROPIC_API_KEY — skipping analysis stage.")
+            else:
+                from analyze import call_claude
+                log(f"[analyze] Starting LLM analysis with {args.analyze_model}...")
+                analysis = call_claude(full_text, model=args.analyze_model)
+                analysis_path = artifact_dir / "transcript_analysis.json"
+                analysis_path.write_text(
+                    json.dumps(analysis, indent=2, ensure_ascii=False), encoding="utf-8"
+                )
+                log(f"[done] transcript_analysis.json → {analysis_path}")
+                log(f"[done] {len(analysis.get('quotes', []))} quotes, "
+                    f"{len(analysis.get('insights', []))} insights, "
+                    f"{len(analysis.get('references', []))} references")
 
         log("[done] All stages complete.")
 

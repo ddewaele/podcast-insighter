@@ -41,7 +41,7 @@ export interface Insight {
 export interface Reference {
   id: string;
   name: string;
-  type: 'tool' | 'project' | 'company' | 'person' | 'concept' | 'paper' | 'blog-post';
+  type: 'tool' | 'project' | 'company' | 'person' | 'concept' | 'paper' | 'blog-post' | 'product';
   url: string | null;
   context: string;
   mentioned_by: string;

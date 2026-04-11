@@ -19,3 +19,6 @@ soundfile>=0.12.1
 # yt-dlp can be installed as a Python package as well as a system binary.
 # Both work; the Python package keeps everything in the venv.
 yt-dlp>=2024.1.0
+
+# ── LLM analysis (optional — only needed for --analyze flag) ─────────────────
+anthropic>=0.40.0
