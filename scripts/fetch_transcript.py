@@ -52,18 +52,23 @@ def extract_video_id(url: str) -> str | None:
     return None
 
 
-def fetch_transcript(video_id: str, lang: str = "en") -> tuple[list[dict], str]:
-    """Fetch captions for a video. Returns (segments, transcript_type).
-
-    transcript_type is one of: 'manual', 'auto-generated'.
-    """
+def get_api():
+    """Return a YouTubeTranscriptApi instance."""
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
     except ImportError:
         log("Error: youtube-transcript-api not installed. Run: pip install youtube-transcript-api")
         sys.exit(1)
+    return YouTubeTranscriptApi()
 
-    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+
+def fetch_transcript(video_id: str, lang: str = "en") -> tuple[list[dict], str]:
+    """Fetch captions for a video. Returns (segments, transcript_type).
+
+    transcript_type is one of: 'manual', 'auto-generated'.
+    """
+    api = get_api()
+    transcript_list = api.list(video_id)
 
     # Prefer manual captions, fall back to auto-generated
     transcript = None
@@ -97,9 +102,8 @@ def fetch_transcript(video_id: str, lang: str = "en") -> tuple[list[dict], str]:
 
 def list_languages(video_id: str) -> None:
     """Print available caption languages for a video."""
-    from youtube_transcript_api import YouTubeTranscriptApi
-
-    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+    api = get_api()
+    transcript_list = api.list(video_id)
 
     print(f"\nAvailable captions for {video_id}:\n")
     print(f"  {'Language':<30} {'Code':<8} {'Type'}")
@@ -185,7 +189,7 @@ def main():
     log(f"[meta] Title: {meta.get('title')}")
 
     # Build transcript text
-    full_text = " ".join(seg["text"] for seg in segments)
+    full_text = " ".join(seg.text for seg in segments)
     word_count = len(full_text.split())
     log(f"[fetch] Transcript: {len(full_text):,} chars, ~{word_count:,} words")
 
@@ -200,9 +204,9 @@ def main():
         "language": args.lang,
         "segments": [
             {
-                "start": round(seg["start"], 3),
-                "end": round(seg["start"] + seg["duration"], 3),
-                "text": seg["text"],
+                "start": round(seg.start, 3),
+                "end": round(seg.start + seg.duration, 3),
+                "text": seg.text,
             }
             for seg in segments
         ],
