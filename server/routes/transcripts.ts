@@ -24,6 +24,77 @@ function serializeTranscript(t: TranscriptWithUser, userId: string) {
 }
 
 export async function transcriptRoutes(app: FastifyInstance) {
+  // GET /api/transcripts/export — export all own transcripts (+ optionally public) as JSON
+  // Registered before /:id so Fastify doesn't match "export" as a param
+  app.get<{ Querystring: { includePublic?: string } }>('/api/transcripts/export', { preHandler: requireAuth }, async (request) => {
+    const userId = request.session.get('userId')!
+    const includePublic = request.query.includePublic === 'true'
+
+    const where = includePublic
+      ? { OR: [{ userId }, { isPublic: true }] }
+      : { userId }
+
+    const transcripts = await prisma.transcript.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return {
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      count: transcripts.length,
+      transcripts: transcripts.map(t => ({
+        title: t.title,
+        youtubeUrl: t.youtubeUrl,
+        videoId: t.videoId,
+        status: t.status,
+        isPublic: t.isPublic,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+        data: t.jsonData ? JSON.parse(t.jsonData) : null,
+      })),
+    }
+  })
+
+  // POST /api/transcripts/import — import transcripts from an export JSON
+  // Registered before /:id so Fastify doesn't match "import" as a param
+  app.post<{ Body: { transcripts: Array<{ title: string; youtubeUrl?: string; videoId?: string; isPublic?: boolean; data: unknown }> } }>(
+    '/api/transcripts/import',
+    { preHandler: requireAuth, bodyLimit: 50 * 1024 * 1024 },
+    async (request, reply) => {
+      const userId = request.session.get('userId')!
+      const { transcripts: items } = request.body
+      if (!Array.isArray(items) || items.length === 0) {
+        return reply.status(400).send({ error: 'transcripts array is required' })
+      }
+
+      let imported = 0
+      let skipped = 0
+
+      for (const item of items) {
+        if (!item.title || !item.data) {
+          skipped++
+          continue
+        }
+        await prisma.transcript.create({
+          data: {
+            id: uuid(),
+            userId,
+            title: item.title,
+            youtubeUrl: item.youtubeUrl ?? null,
+            videoId: item.videoId ?? null,
+            status: 'ready',
+            isPublic: item.isPublic ?? false,
+            jsonData: JSON.stringify(item.data),
+          },
+        })
+        imported++
+      }
+
+      return { imported, skipped, total: items.length }
+    },
+  )
+
   // GET /api/transcripts — list own + public transcripts (no auth required; guests see public only)
   app.get('/api/transcripts', async (request) => {
     const userId = request.session.get('userId') ?? ''
@@ -94,75 +165,6 @@ export async function transcriptRoutes(app: FastifyInstance) {
     })
     return { ok: true }
   })
-
-  // GET /api/transcripts/export — export all own transcripts (+ optionally public) as JSON
-  app.get<{ Querystring: { includePublic?: string } }>('/api/transcripts/export', { preHandler: requireAuth }, async (request) => {
-    const userId = request.session.get('userId')!
-    const includePublic = request.query.includePublic === 'true'
-
-    const where = includePublic
-      ? { OR: [{ userId }, { isPublic: true }] }
-      : { userId }
-
-    const transcripts = await prisma.transcript.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    })
-
-    return {
-      exportedAt: new Date().toISOString(),
-      version: 1,
-      count: transcripts.length,
-      transcripts: transcripts.map(t => ({
-        title: t.title,
-        youtubeUrl: t.youtubeUrl,
-        videoId: t.videoId,
-        status: t.status,
-        isPublic: t.isPublic,
-        createdAt: t.createdAt,
-        updatedAt: t.updatedAt,
-        data: t.jsonData ? JSON.parse(t.jsonData) : null,
-      })),
-    }
-  })
-
-  // POST /api/transcripts/import — import transcripts from an export JSON
-  app.post<{ Body: { transcripts: Array<{ title: string; youtubeUrl?: string; videoId?: string; isPublic?: boolean; data: unknown }> } }>(
-    '/api/transcripts/import',
-    { preHandler: requireAuth },
-    async (request, reply) => {
-      const userId = request.session.get('userId')!
-      const { transcripts: items } = request.body
-      if (!Array.isArray(items) || items.length === 0) {
-        return reply.status(400).send({ error: 'transcripts array is required' })
-      }
-
-      let imported = 0
-      let skipped = 0
-
-      for (const item of items) {
-        if (!item.title || !item.data) {
-          skipped++
-          continue
-        }
-        await prisma.transcript.create({
-          data: {
-            id: uuid(),
-            userId,
-            title: item.title,
-            youtubeUrl: item.youtubeUrl ?? null,
-            videoId: item.videoId ?? null,
-            status: 'ready',
-            isPublic: item.isPublic ?? false,
-            jsonData: JSON.stringify(item.data),
-          },
-        })
-        imported++
-      }
-
-      return { imported, skipped, total: items.length }
-    },
-  )
 
   // DELETE /api/transcripts/:id
   app.delete<{ Params: { id: string } }>('/api/transcripts/:id', { preHandler: requireAuth }, async (request, reply) => {
