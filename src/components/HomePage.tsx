@@ -244,12 +244,12 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
                     <ExportIcon /> Export JSON
                   </button>
                   <hr className={styles.dataMenuDivider} />
-                  <button className={styles.dataMenuItem} onClick={() => { importRef.current?.click(); setShowDataMenu(false) }} disabled={importing}>
+                  <button className={styles.dataMenuItem} onClick={() => { setShowDataMenu(false); importRef.current?.click() }} disabled={importing}>
                     <ImportIcon /> {importing ? 'Importing…' : 'Import JSON'}
                   </button>
-                  <input ref={importRef} type="file" accept=".json" onChange={handleImportFile} style={{ display: 'none' }} />
                 </div>
               )}
+              <input ref={importRef} type="file" accept=".json" onChange={handleImportFile} style={{ display: 'none' }} />
             </div>
             <button
               className={styles.secondaryBtn}
