@@ -4,8 +4,15 @@ import { DropZone } from './components/DropZone'
 import { Dashboard } from './components/Dashboard'
 import { LoginScreen } from './components/LoginScreen'
 import { HomePage } from './components/HomePage'
+import { PublicTranscriptView } from './components/PublicTranscriptView'
 
 type View = 'home' | 'upload' | 'dashboard'
+
+// Extract transcript ID from /t/:id URLs
+function getPublicTranscriptId(): string | null {
+  const match = window.location.pathname.match(/^\/t\/([^/]+)$/)
+  return match ? match[1] : null
+}
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('theme') as Theme | null
@@ -24,11 +31,25 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [view, setView] = useState<View>('home')
+  const [publicData, setPublicData] = useState<TranscriptAnalysis | null | false>(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }, [theme])
+
+  // Load public transcript if URL is /t/:id (no auth needed)
+  useEffect(() => {
+    const id = getPublicTranscriptId()
+    if (!id) return
+    fetch(`/api/transcripts/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(item => {
+        if (item?.data) setPublicData(item.data as TranscriptAnalysis)
+        else setPublicData(false)
+      })
+      .catch(() => setPublicData(false))
+  }, [])
 
   // Check if the user already has a session on mount
   useEffect(() => {
@@ -102,6 +123,13 @@ export default function App() {
   }, [])
 
   const commonProps = { theme, onToggleTheme: toggleTheme, user: user!, onLogout: handleLogout }
+
+  // Public transcript view — shown to everyone (logged in or not)
+  if (getPublicTranscriptId()) {
+    if (publicData === null) return null // loading
+    if (publicData === false) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Transcript not found or not public.</div>
+    return <PublicTranscriptView data={publicData} theme={theme} onToggleTheme={toggleTheme} />
+  }
 
   // Blank screen while we check the session (avoids flash of login screen)
   if (!authChecked) return null
