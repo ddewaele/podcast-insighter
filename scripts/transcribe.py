@@ -638,7 +638,7 @@ Examples:
             if not os.environ.get("ANTHROPIC_API_KEY"):
                 log("Warning: --analyze requires ANTHROPIC_API_KEY — skipping analysis stage.")
             else:
-                from analyze import call_claude, validate_analysis
+                from analyze import call_claude
                 log(f"[analyze] Starting LLM analysis with {args.analyze_model}...")
                 analysis = call_claude(full_text, model=args.analyze_model)
                 analysis_path = artifact_dir / "transcript_analysis.json"

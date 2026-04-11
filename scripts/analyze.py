@@ -158,65 +158,125 @@ Skip generic filler like "that's a great question" or "I think that's really imp
 - reference type must be one of: "tool", "project", "paper", "person", "book", "blog-post", "concept", "company", "event", "dataset", "product"."""
 
 
+
 # ---------------------------------------------------------------------------
-# Schema validation
+# Tool schema — forces Claude to return structured output matching this spec
 # ---------------------------------------------------------------------------
 
-REQUIRED_TOP_KEYS = {"metadata", "summary", "quotes", "insights", "references",
-                     "disagreements_and_nuance", "topic_segments"}
-
-VALID_NOVELTY = {"low", "medium", "high"}
-VALID_POSITION = {"early", "early-mid", "mid", "mid-late", "late"}
-VALID_REF_TYPE = {"tool", "project", "paper", "person", "book", "blog-post",
-                  "concept", "company", "event", "dataset", "product"}
-
-
-def validate_analysis(data: dict) -> list[str]:
-    """Return a list of validation errors (empty = valid)."""
-    errors: list[str] = []
-
-    missing = REQUIRED_TOP_KEYS - set(data.keys())
-    if missing:
-        errors.append(f"Missing top-level keys: {missing}")
-        return errors  # Can't validate further
-
-    # metadata
-    meta = data["metadata"]
-    for field in ("title", "speakers", "primary_topics"):
-        if field not in meta:
-            errors.append(f"metadata.{field} is missing")
-
-    # summary
-    summary = data["summary"]
-    for field in ("one_liner", "executive_summary", "key_takeaways"):
-        if field not in summary:
-            errors.append(f"summary.{field} is missing")
-
-    # quotes
-    quotes = data.get("quotes", [])
-    if len(quotes) < 5:
-        errors.append(f"Expected at least 5 quotes, got {len(quotes)}")
-    for q in quotes:
-        for field in ("id", "text", "speaker", "context", "tags"):
-            if field not in q:
-                errors.append(f"Quote {q.get('id', '?')} missing field: {field}")
-
-    # insights
-    for ins in data.get("insights", []):
-        if ins.get("novelty") not in VALID_NOVELTY:
-            errors.append(f"Insight {ins.get('id', '?')} has invalid novelty: {ins.get('novelty')}")
-
-    # references
-    for ref in data.get("references", []):
-        if ref.get("type") not in VALID_REF_TYPE:
-            errors.append(f"Reference {ref.get('id', '?')} has invalid type: {ref.get('type')}")
-
-    # topic_segments
-    for seg in data.get("topic_segments", []):
-        if seg.get("approximate_position") not in VALID_POSITION:
-            errors.append(f"Topic segment has invalid position: {seg.get('approximate_position')}")
-
-    return errors
+ANALYSIS_TOOL = {
+    "name": "save_analysis",
+    "description": "Save the structured transcript analysis.",
+    "input_schema": {
+        "type": "object",
+        "required": ["metadata", "summary", "quotes", "insights", "references",
+                      "disagreements_and_nuance", "topic_segments"],
+        "properties": {
+            "metadata": {
+                "type": "object",
+                "required": ["title", "speakers", "estimated_duration_minutes", "primary_topics", "date_hint"],
+                "properties": {
+                    "title": {"type": "string"},
+                    "speakers": {"type": "array", "items": {"type": "string"}},
+                    "estimated_duration_minutes": {"type": ["number", "null"]},
+                    "primary_topics": {"type": "array", "items": {"type": "string"}},
+                    "date_hint": {"type": ["string", "null"]},
+                },
+            },
+            "summary": {
+                "type": "object",
+                "required": ["one_liner", "executive_summary", "key_takeaways"],
+                "properties": {
+                    "one_liner": {"type": "string"},
+                    "executive_summary": {"type": "string"},
+                    "key_takeaways": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+            "quotes": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["id", "text", "speaker", "context", "tags"],
+                    "properties": {
+                        "id": {"type": "string"},
+                        "text": {"type": "string"},
+                        "speaker": {"type": "string"},
+                        "context": {"type": "string"},
+                        "tags": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
+            },
+            "insights": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["id", "claim", "speaker", "supporting_detail", "novelty", "tags"],
+                    "properties": {
+                        "id": {"type": "string"},
+                        "claim": {"type": "string"},
+                        "speaker": {"type": "string"},
+                        "supporting_detail": {"type": "string"},
+                        "novelty": {"type": "string", "enum": ["low", "medium", "high"]},
+                        "tags": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
+            },
+            "references": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["id", "name", "type", "url", "context", "mentioned_by"],
+                    "properties": {
+                        "id": {"type": "string"},
+                        "name": {"type": "string"},
+                        "type": {"type": "string", "enum": [
+                            "tool", "project", "paper", "person", "book", "blog-post",
+                            "concept", "company", "event", "dataset", "product",
+                        ]},
+                        "url": {"type": ["string", "null"]},
+                        "context": {"type": "string"},
+                        "mentioned_by": {"type": "string"},
+                    },
+                },
+            },
+            "disagreements_and_nuance": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["topic", "positions", "resolution"],
+                    "properties": {
+                        "topic": {"type": "string"},
+                        "positions": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": ["speaker", "position"],
+                                "properties": {
+                                    "speaker": {"type": "string"},
+                                    "position": {"type": "string"},
+                                },
+                            },
+                        },
+                        "resolution": {"type": "string"},
+                    },
+                },
+            },
+            "topic_segments": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["approximate_position", "topic", "summary"],
+                    "properties": {
+                        "approximate_position": {"type": "string", "enum": [
+                            "early", "early-mid", "mid", "mid-late", "late",
+                        ]},
+                        "topic": {"type": "string"},
+                        "summary": {"type": "string"},
+                    },
+                },
+            },
+        },
+    },
+}
 
 
 # ---------------------------------------------------------------------------
@@ -224,7 +284,12 @@ def validate_analysis(data: dict) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def call_claude(transcript_text: str, model: str, max_retries: int = 3) -> dict:
-    """Send the transcript to Claude and return the parsed analysis JSON."""
+    """Send the transcript to Claude and return the parsed analysis JSON.
+
+    Uses tool use with forced tool_choice to guarantee the response conforms
+    to the TranscriptAnalysis JSON schema. No manual JSON parsing needed —
+    the SDK returns the structured data directly.
+    """
     try:
         from anthropic import Anthropic
     except ImportError:
@@ -247,10 +312,12 @@ def call_claude(transcript_text: str, model: str, max_retries: int = 3) -> dict:
                 model=model,
                 max_tokens=16384,
                 system=SYSTEM_PROMPT,
+                tools=[ANALYSIS_TOOL],
+                tool_choice={"type": "tool", "name": "save_analysis"},
                 messages=[
                     {
                         "role": "user",
-                        "content": f"Analyze this transcript and return the structured JSON:\n\n{transcript_text}",
+                        "content": f"Analyze this transcript and call save_analysis with the result:\n\n{transcript_text}",
                     }
                 ],
             )
@@ -264,37 +331,27 @@ def call_claude(transcript_text: str, model: str, max_retries: int = 3) -> dict:
             raise
 
         elapsed = time.time() - start
-        raw_text = response.content[0].text.strip()
         log(f"[analyze] Response received in {elapsed:.1f}s "
             f"({response.usage.input_tokens} input, {response.usage.output_tokens} output tokens)")
 
-        # Strip markdown fences if the model wrapped the JSON
-        if raw_text.startswith("```"):
-            raw_text = raw_text.split("\n", 1)[1]  # Remove opening fence line
-            if raw_text.endswith("```"):
-                raw_text = raw_text[:-3]
-            raw_text = raw_text.strip()
-
-        # Parse JSON
-        try:
-            data = json.loads(raw_text)
-        except json.JSONDecodeError as e:
-            log(f"[analyze] Invalid JSON from Claude: {e}")
+        # Extract the structured data from the tool call
+        tool_block = next(
+            (block for block in response.content if block.type == "tool_use"),
+            None,
+        )
+        if not tool_block:
+            log("[analyze] No tool_use block in response")
             if attempt < max_retries:
-                log(f"[analyze] Retrying with stricter prompt...")
+                log("[analyze] Retrying...")
                 continue
-            raise ValueError(f"Claude returned invalid JSON after {max_retries} attempts") from e
+            raise ValueError("Claude did not return a tool_use block")
 
-        # Validate schema
-        errors = validate_analysis(data)
-        if errors:
-            log(f"[analyze] Validation errors ({len(errors)}):")
-            for err in errors[:10]:
-                log(f"  - {err}")
-            if attempt < max_retries:
-                log(f"[analyze] Retrying...")
-                continue
-            log("[analyze] Warning: proceeding with validation errors after max retries")
+        data = tool_block.input  # Already a dict — schema-validated by the API
+
+        # Light sanity check (the schema enforces structure, but not quantity)
+        quote_count = len(data.get("quotes", []))
+        if quote_count < 5:
+            log(f"[analyze] Warning: only {quote_count} quotes (expected 8-15)")
 
         return data
 
