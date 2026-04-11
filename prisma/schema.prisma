@@ -17,6 +17,7 @@ model User {
 
   transcripts Transcript[]
   jobs        Job[]
+  tags        Tag[]
 
   @@map("users")
 }
@@ -34,10 +35,35 @@ model Transcript {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobs Job[]
+  tags TranscriptTag[]
 
   @@map("transcripts")
+}
+
+model Tag {
+  id           String          @id
+  userId       String          @map("user_id")
+  name         String
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcripts  TranscriptTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model TranscriptTag {
+  transcriptId String     @map("transcript_id")
+  tagId        String     @map("tag_id")
+
+  transcript   Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  tag          Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([transcriptId, tagId])
+  @@map("transcript_tags")
 }
 
 model Job {

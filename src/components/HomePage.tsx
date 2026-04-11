@@ -3,6 +3,7 @@ import type { Theme, User, TranscriptListItem, TranscriptAnalysis } from '../typ
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { WaveformIconSmall } from './icons'
+import { TagManager } from './TagManager'
 import styles from './HomePage.module.css'
 
 interface Props {
@@ -204,6 +205,17 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
     }
   }, [])
 
+  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null)
+
+  // Gather all unique tags from loaded transcripts
+  const allTags = Array.from(
+    new Map(transcripts.flatMap(t => t.tags ?? []).map(tag => [tag.id, tag])).values()
+  ).sort((a, b) => a.name.localeCompare(b.name))
+
+  const filteredTranscripts = activeTagFilter
+    ? transcripts.filter(t => (t.tags ?? []).some(tag => tag.id === activeTagFilter))
+    : transcripts
+
   const showPanel = generate.kind !== 'idle'
 
   return (
@@ -361,6 +373,27 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
           <div className={styles.errorBox}>{listError}</div>
         )}
 
+        {/* Tag filter bar */}
+        {!loading && !listError && allTags.length > 0 && (
+          <div className={styles.tagFilterBar}>
+            <button
+              className={`${styles.tagFilterChip} ${activeTagFilter === null ? styles.tagFilterActive : ''}`}
+              onClick={() => setActiveTagFilter(null)}
+            >
+              All
+            </button>
+            {allTags.map(tag => (
+              <button
+                key={tag.id}
+                className={`${styles.tagFilterChip} ${activeTagFilter === tag.id ? styles.tagFilterActive : ''}`}
+                onClick={() => setActiveTagFilter(tag.id === activeTagFilter ? null : tag.id)}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {!loading && !listError && transcripts.length === 0 && (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>
@@ -373,7 +406,7 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
 
         {!loading && !listError && transcripts.length > 0 && (
           <div className={styles.grid}>
-            {transcripts.map(t => (
+            {filteredTranscripts.map(t => (
               <TranscriptCard
                 key={t.id}
                 transcript={t}
@@ -382,6 +415,9 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
                 onDelete={() => setConfirmDelete({ id: t.id, title: t.title })}
                 onVisibilityChange={(isPublic) =>
                   setTranscripts(prev => prev.map(x => x.id === t.id ? { ...x, isPublic } : x))
+                }
+                onTagsChange={(tags) =>
+                  setTranscripts(prev => prev.map(x => x.id === t.id ? { ...x, tags } : x))
                 }
               />
             ))}
@@ -424,9 +460,10 @@ interface CardProps {
   onOpen: () => void
   onDelete: (item: { id: string; title: string }) => void
   onVisibilityChange: (isPublic: boolean) => void
+  onTagsChange: (tags: { id: string; name: string }[]) => void
 }
 
-function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibilityChange }: CardProps) {
+function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibilityChange, onTagsChange }: CardProps) {
   const [togglingVisibility, setTogglingVisibility] = useState(false)
 
   const date = new Date(t.createdAt).toLocaleDateString('en-US', {
@@ -464,6 +501,11 @@ function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibility
           <p className={styles.cardUrl}>{t.youtubeUrl}</p>
         )}
       </div>
+      <TagManager
+        transcriptId={t.id}
+        initialTags={t.tags ?? []}
+        isOwner={t.isOwner}
+      />
       <div className={styles.cardBottom}>
         <span className={styles.cardDate}>{date}</span>
         <div className={styles.cardActions}>
