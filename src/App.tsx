@@ -19,6 +19,7 @@ function getInitialTheme(): Theme {
 
 export default function App() {
   const [data, setData] = useState<TranscriptAnalysis | null>(null)
+  const [currentTranscriptId, setCurrentTranscriptId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const [user, setUser] = useState<User | null>(null)
@@ -84,6 +85,7 @@ export default function App() {
 
   const handleReset = useCallback(() => {
     setData(null)
+    setCurrentTranscriptId(null)
     setError(null)
     setView('home')
   }, [])
@@ -92,12 +94,14 @@ export default function App() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     setUser(null)
     setData(null)
+    setCurrentTranscriptId(null)
     setError(null)
     setView('home')
   }, [])
 
-  const handleOpenTranscript = useCallback((transcriptData: TranscriptAnalysis) => {
+  const handleOpenTranscript = useCallback((transcriptData: TranscriptAnalysis, transcriptId?: string) => {
     setData(transcriptData)
+    setCurrentTranscriptId(transcriptId ?? null)
     setView('dashboard')
   }, [])
 
@@ -112,7 +116,7 @@ export default function App() {
   }
 
   if (view === 'dashboard' && data) {
-    return <Dashboard data={data} onReset={handleReset} {...commonProps} />
+    return <Dashboard data={data} transcriptId={currentTranscriptId} onReset={handleReset} {...commonProps} />
   }
 
   if (view === 'upload') {

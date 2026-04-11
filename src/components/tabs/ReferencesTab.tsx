@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { Reference } from '../../types'
+import { BookmarkButton } from '../BookmarkButton'
 import styles from './ReferencesTab.module.css'
 
 interface Props {
@@ -111,7 +112,10 @@ function RefCard({ reference }: { reference: Reference }) {
         </div>
       </div>
       <p className={styles.context}>{reference.context}</p>
-      <span className={styles.mentionedBy}>Mentioned by {reference.mentioned_by}</span>
+      <div className={styles.cardFooter}>
+        <span className={styles.mentionedBy}>Mentioned by {reference.mentioned_by}</span>
+        <BookmarkButton itemType="reference" itemId={reference.id} />
+      </div>
     </article>
   )
 }

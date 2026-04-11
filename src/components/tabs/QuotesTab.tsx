@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { Quote } from '../../types'
+import { BookmarkButton } from '../BookmarkButton'
 import styles from './QuotesTab.module.css'
 
 interface Props {
@@ -68,6 +69,7 @@ function QuoteCard({ quote }: { quote: Quote }) {
               </span>
             ))}
           </div>
+          <BookmarkButton itemType="quote" itemId={quote.id} />
         </div>
         {quote.context && (
           <p className={styles.context}>{quote.context}</p>
