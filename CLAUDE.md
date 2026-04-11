@@ -28,7 +28,16 @@ npm run build           # tsc + vite build → dist/
 npm run preview         # Preview the production build
 ```
 
-There are no automated tests. Manual browser testing is the verification method.
+### Tests
+
+```bash
+npm test              # Run all tests once (vitest)
+npm run test:watch    # Run in watch mode during development
+```
+
+API route tests use Fastify's `inject()` method — no running server needed. Tests run against the real database so `docker compose up postgres -d` must be running.
+
+Run tests before pushing any backend changes.
 
 ## Architecture
 

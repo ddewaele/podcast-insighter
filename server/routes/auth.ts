@@ -67,4 +67,24 @@ export async function authRoutes(app: FastifyInstance) {
     await request.session.destroy()
     return reply.status(204).send()
   })
+
+  // GET /api/auth/test-login — test-only: create/login a test user without Google OAuth.
+  // Only available when ALLOW_TEST_LOGIN=true (never set in production).
+  if (process.env.ALLOW_TEST_LOGIN === 'true') {
+    app.get('/api/auth/test-login', async (request, reply) => {
+      const user = await prisma.user.upsert({
+        where: { googleId: 'test-user' },
+        update: {},
+        create: {
+          id: uuid(),
+          googleId: 'test-user',
+          email: 'test@playwright.local',
+          name: 'Playwright Test User',
+        },
+      })
+      request.session.set('userId', user.id)
+      await request.session.save()
+      return reply.redirect(process.env.FRONTEND_URL ?? 'http://localhost:5174')
+    })
+  }
 }
