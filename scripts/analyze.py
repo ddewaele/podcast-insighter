@@ -87,7 +87,7 @@ Given a raw transcript, produce a single JSON object with the exact structure sp
     {
       "id": "r1",
       "name": "Name of the tool, project, paper, person, book, blog post, or concept",
-      "type": "tool | project | paper | person | book | blog-post | concept | company | event | dataset",
+      "type": "tool | project | paper | person | book | blog-post | concept | company | event | dataset | product",
       "url": "URL if mentioned or trivially inferrable, otherwise null",
       "context": "How it came up and why it was relevant.",
       "mentioned_by": "Speaker name"
@@ -155,7 +155,7 @@ Skip generic filler like "that's a great question" or "I think that's really imp
 - The executive_summary must read as coherent prose, not bullet points.
 - novelty values must be exactly one of: "low", "medium", "high".
 - approximate_position values must be one of: "early", "early-mid", "mid", "mid-late", "late".
-- reference type must be one of: "tool", "project", "paper", "person", "book", "blog-post", "concept", "company", "event", "dataset"."""
+- reference type must be one of: "tool", "project", "paper", "person", "book", "blog-post", "concept", "company", "event", "dataset", "product"."""
 
 
 # ---------------------------------------------------------------------------
@@ -168,7 +168,7 @@ REQUIRED_TOP_KEYS = {"metadata", "summary", "quotes", "insights", "references",
 VALID_NOVELTY = {"low", "medium", "high"}
 VALID_POSITION = {"early", "early-mid", "mid", "mid-late", "late"}
 VALID_REF_TYPE = {"tool", "project", "paper", "person", "book", "blog-post",
-                  "concept", "company", "event", "dataset"}
+                  "concept", "company", "event", "dataset", "product"}
 
 
 def validate_analysis(data: dict) -> list[str]:
