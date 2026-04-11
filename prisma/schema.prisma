@@ -17,6 +17,7 @@ model User {
 
   transcripts Transcript[]
   jobs        Job[]
+  votes       Vote[]
 
   @@map("users")
 }
@@ -34,10 +35,24 @@ model Transcript {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobs Job[]
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs  Job[]
+  votes Vote[]
 
   @@map("transcripts")
+}
+
+model Vote {
+  userId       String     @map("user_id")
+  transcriptId String     @map("transcript_id")
+  value        Int        // +1 upvote, -1 downvote
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcript   Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+
+  @@id([userId, transcriptId])
+  @@map("votes")
 }
 
 model Job {
