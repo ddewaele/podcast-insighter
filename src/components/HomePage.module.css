@@ -424,6 +424,13 @@
   justify-content: space-between;
 }
 
+.cardLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .cardDate {
   font-size: 0.75rem;
   color: var(--text-dim);

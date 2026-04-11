@@ -3,6 +3,7 @@ import type { Theme, User, TranscriptListItem, TranscriptAnalysis } from '../typ
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { WaveformIconSmall } from './icons'
+import { VoteButtons } from './VoteButtons'
 import styles from './HomePage.module.css'
 
 interface Props {
@@ -465,7 +466,10 @@ function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibility
         )}
       </div>
       <div className={styles.cardBottom}>
-        <span className={styles.cardDate}>{date}</span>
+        <div className={styles.cardLeft}>
+          <span className={styles.cardDate}>{date}</span>
+          {t.isPublic && <VoteButtons transcriptId={t.id} />}
+        </div>
         <div className={styles.cardActions}>
           {t.isOwner && (
             <button
