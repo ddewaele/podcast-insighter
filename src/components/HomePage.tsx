@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react'
+import { useState, useEffect, useRef, useCallback, FormEvent, ChangeEvent } from 'react'
 import type { Theme, User, TranscriptListItem, TranscriptAnalysis } from '../types'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
@@ -139,6 +139,71 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
     setSubmitError(null)
   }
 
+  // ── Export / Import ──────────────────────────────────────────────────
+  const [showDataMenu, setShowDataMenu] = useState(false)
+  const [includePublic, setIncludePublic] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [dataMessage, setDataMessage] = useState<string | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!showDataMenu) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowDataMenu(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showDataMenu])
+
+  const handleExport = useCallback(async () => {
+    setShowDataMenu(false)
+    setDataMessage(null)
+    const url = `/api/transcripts/export?includePublic=${includePublic}`
+    const r = await fetch(url, { credentials: 'include' })
+    if (!r.ok) { setDataMessage('Export failed.'); return }
+    const data = await r.json()
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `podcast-insighter-export-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+    setDataMessage(`Exported ${data.count} transcript${data.count === 1 ? '' : 's'}.`)
+  }, [includePublic])
+
+  const handleImportFile = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setShowDataMenu(false)
+    setImporting(true)
+    setDataMessage(null)
+
+    try {
+      const text = await file.text()
+      const json = JSON.parse(text)
+      const items = json.transcripts
+      if (!Array.isArray(items)) throw new Error('Invalid export file — missing transcripts array')
+
+      const r = await fetch('/api/transcripts/import', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcripts: items }),
+      })
+      if (!r.ok) throw new Error('Import request failed')
+      const result = await r.json()
+      setDataMessage(`Imported ${result.imported} transcript${result.imported === 1 ? '' : 's'}${result.skipped ? ` (${result.skipped} skipped)` : ''}.`)
+      setRefreshKey(k => k + 1)
+    } catch (err) {
+      setDataMessage(err instanceof Error ? err.message : 'Import failed.')
+    } finally {
+      setImporting(false)
+      if (importRef.current) importRef.current.value = ''
+    }
+  }, [])
+
   const showPanel = generate.kind !== 'idle'
 
   return (
@@ -161,6 +226,31 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
             <p className={styles.pageSubtitle}>Your uploaded and generated transcript analyses</p>
           </div>
           <div className={styles.headerActions}>
+            <div className={styles.dataMenuWrapper} ref={menuRef}>
+              <button
+                className={styles.secondaryBtn}
+                onClick={() => setShowDataMenu(v => !v)}
+              >
+                <DataIcon />
+                Data
+              </button>
+              {showDataMenu && (
+                <div className={styles.dataMenu}>
+                  <label className={styles.dataMenuCheck}>
+                    <input type="checkbox" checked={includePublic} onChange={e => setIncludePublic(e.target.checked)} />
+                    Include public transcripts
+                  </label>
+                  <button className={styles.dataMenuItem} onClick={handleExport}>
+                    <ExportIcon /> Export JSON
+                  </button>
+                  <hr className={styles.dataMenuDivider} />
+                  <button className={styles.dataMenuItem} onClick={() => { importRef.current?.click(); setShowDataMenu(false) }} disabled={importing}>
+                    <ImportIcon /> {importing ? 'Importing…' : 'Import JSON'}
+                  </button>
+                  <input ref={importRef} type="file" accept=".json" onChange={handleImportFile} style={{ display: 'none' }} />
+                </div>
+              )}
+            </div>
             <button
               className={styles.secondaryBtn}
               onClick={onUpload}
@@ -178,6 +268,12 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
               Generate from YouTube
             </button>
           </div>
+          {dataMessage && (
+            <div className={styles.dataToast}>
+              {dataMessage}
+              <button className={styles.dataToastClose} onClick={() => setDataMessage(null)}>×</button>
+            </div>
+          )}
         </div>
 
         {/* Generate panel */}
@@ -467,6 +563,34 @@ function EmptyIcon() {
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
       <rect x="8" y="6" width="32" height="36" rx="4" />
       <path d="M16 16h16M16 22h16M16 28h10" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function DataIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="8" cy="4" rx="6" ry="2.5" />
+      <path d="M2 4v4c0 1.38 2.69 2.5 6 2.5S14 9.38 14 8V4" />
+      <path d="M2 8v4c0 1.38 2.69 2.5 6 2.5S14 13.38 14 12V8" />
+    </svg>
+  )
+}
+
+function ExportIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3v7M8 10L5 7M8 10l3-3" />
+      <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
+    </svg>
+  )
+}
+
+function ImportIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 10V3M8 3L5 6M8 3l3 3" />
+      <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
     </svg>
   )
 }
