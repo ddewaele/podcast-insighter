@@ -677,6 +677,111 @@
   margin: 0;
 }
 
+/* Compare selection */
+
+.compareModeActive {
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+}
+
+.cardCompareSelected {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.compareSelectBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.compareSelectBtn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+}
+
+.compareSelectBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.compareSelectBtnActive {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+}
+
+.compareBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  padding: 0.625rem 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.compareBarText {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+}
+
+.compareBarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.compareBarBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.compareBarBtn:hover {
+  background: #4f46e5;
+}
+
+.compareBarClear {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.compareBarClear:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
 /* Error */
 
 .errorBox {

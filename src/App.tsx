@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, DragEvent } from 'react'
-import type { Theme, TranscriptAnalysis, User } from './types'
+import type { Theme, TranscriptAnalysis, User, TranscriptListItem } from './types'
 import { DropZone } from './components/DropZone'
 import { Dashboard } from './components/Dashboard'
 import { LoginScreen } from './components/LoginScreen'
 import { HomePage } from './components/HomePage'
+import { CompareView } from './components/CompareView'
 
-type View = 'home' | 'upload' | 'dashboard'
+type View = 'home' | 'upload' | 'dashboard' | 'compare'
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('theme') as Theme | null
@@ -19,6 +20,7 @@ function getInitialTheme(): Theme {
 
 export default function App() {
   const [data, setData] = useState<TranscriptAnalysis | null>(null)
+  const [compareSelection, setCompareSelection] = useState<[TranscriptListItem, TranscriptListItem] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const [user, setUser] = useState<User | null>(null)
@@ -84,6 +86,7 @@ export default function App() {
 
   const handleReset = useCallback(() => {
     setData(null)
+    setCompareSelection(null)
     setError(null)
     setView('home')
   }, [])
@@ -92,6 +95,7 @@ export default function App() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     setUser(null)
     setData(null)
+    setCompareSelection(null)
     setError(null)
     setView('home')
   }, [])
@@ -99,6 +103,11 @@ export default function App() {
   const handleOpenTranscript = useCallback((transcriptData: TranscriptAnalysis) => {
     setData(transcriptData)
     setView('dashboard')
+  }, [])
+
+  const handleCompare = useCallback((a: TranscriptListItem, b: TranscriptListItem) => {
+    setCompareSelection([a, b])
+    setView('compare')
   }, [])
 
   const commonProps = { theme, onToggleTheme: toggleTheme, user: user!, onLogout: handleLogout }
@@ -109,6 +118,17 @@ export default function App() {
   // Not logged in → login screen
   if (!user) {
     return <LoginScreen theme={theme} onToggleTheme={toggleTheme} />
+  }
+
+  if (view === 'compare' && compareSelection) {
+    return (
+      <CompareView
+        transcriptA={compareSelection[0]}
+        transcriptB={compareSelection[1]}
+        onBack={handleReset}
+        {...commonProps}
+      />
+    )
   }
 
   if (view === 'dashboard' && data) {
@@ -131,6 +151,7 @@ export default function App() {
     <HomePage
       onOpen={handleOpenTranscript}
       onUpload={() => setView('upload')}
+      onCompare={handleCompare}
       {...commonProps}
     />
   )

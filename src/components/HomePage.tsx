@@ -12,6 +12,7 @@ interface Props {
   onLogout: () => void
   onOpen: (data: TranscriptAnalysis) => void
   onUpload: () => void
+  onCompare: (a: TranscriptListItem, b: TranscriptListItem) => void
 }
 
 type GenerateState =
@@ -28,7 +29,7 @@ const STAGE_LABELS: Record<string, string> = {
   done: 'Done',
 }
 
-export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUpload }: Props) {
+export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUpload, onCompare }: Props) {
   const [transcripts, setTranscripts] = useState<TranscriptListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [opening, setOpening] = useState<string | null>(null)
@@ -204,6 +205,17 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
     }
   }, [])
 
+  // ── Compare selection ────────────────────────────────────────────────
+  const [compareSelected, setCompareSelected] = useState<TranscriptListItem[]>([])
+
+  function toggleCompareSelect(t: TranscriptListItem) {
+    setCompareSelected(prev => {
+      if (prev.find(x => x.id === t.id)) return prev.filter(x => x.id !== t.id)
+      if (prev.length >= 2) return prev
+      return [...prev, t]
+    })
+  }
+
   const showPanel = generate.kind !== 'idle'
 
   return (
@@ -266,6 +278,18 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
             >
               <YoutubeIcon />
               Generate from YouTube
+            </button>
+            <button
+              className={`${styles.secondaryBtn} ${compareSelected.length > 0 ? styles.compareModeActive : ''}`}
+              onClick={() => compareSelected.length === 0
+                ? setCompareSelected([])
+                : setCompareSelected([])}
+              title={compareSelected.length > 0 ? 'Clear compare selection' : 'Select 2 transcripts to compare'}
+            >
+              <CompareIcon />
+              {compareSelected.length === 0
+                ? 'Compare'
+                : `${compareSelected.length}/2 selected`}
             </button>
           </div>
           {dataMessage && (
@@ -371,6 +395,29 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
           </div>
         )}
 
+        {compareSelected.length > 0 && (
+          <div className={styles.compareBar}>
+            <span className={styles.compareBarText}>
+              {compareSelected.length === 1
+                ? `"${compareSelected[0].title}" selected — pick one more`
+                : `"${compareSelected[0].title}" vs "${compareSelected[1].title}"`}
+            </span>
+            <div className={styles.compareBarActions}>
+              {compareSelected.length === 2 && (
+                <button
+                  className={styles.compareBarBtn}
+                  onClick={() => onCompare(compareSelected[0], compareSelected[1])}
+                >
+                  <CompareIcon /> Compare now
+                </button>
+              )}
+              <button className={styles.compareBarClear} onClick={() => setCompareSelected([])}>
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+
         {!loading && !listError && transcripts.length > 0 && (
           <div className={styles.grid}>
             {transcripts.map(t => (
@@ -383,6 +430,9 @@ export function HomePage({ theme, onToggleTheme, user, onLogout, onOpen, onUploa
                 onVisibilityChange={(isPublic) =>
                   setTranscripts(prev => prev.map(x => x.id === t.id ? { ...x, isPublic } : x))
                 }
+                compareSelected={compareSelected.some(x => x.id === t.id)}
+                onToggleCompare={() => toggleCompareSelect(t)}
+                compareDisabled={compareSelected.length >= 2 && !compareSelected.find(x => x.id === t.id)}
               />
             ))}
           </div>
@@ -424,9 +474,12 @@ interface CardProps {
   onOpen: () => void
   onDelete: (item: { id: string; title: string }) => void
   onVisibilityChange: (isPublic: boolean) => void
+  compareSelected: boolean
+  onToggleCompare: () => void
+  compareDisabled: boolean
 }
 
-function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibilityChange }: CardProps) {
+function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibilityChange, compareSelected, onToggleCompare, compareDisabled }: CardProps) {
   const [togglingVisibility, setTogglingVisibility] = useState(false)
 
   const date = new Date(t.createdAt).toLocaleDateString('en-US', {
@@ -447,7 +500,7 @@ function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibility
   }
 
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card} ${compareSelected ? styles.cardCompareSelected : ''}`}>
       <div className={styles.cardTop}>
         <div className={styles.cardMeta}>
           <StatusBadge status={t.status} />
@@ -467,6 +520,14 @@ function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibility
       <div className={styles.cardBottom}>
         <span className={styles.cardDate}>{date}</span>
         <div className={styles.cardActions}>
+          <button
+            className={`${styles.compareSelectBtn} ${compareSelected ? styles.compareSelectBtnActive : ''}`}
+            onClick={onToggleCompare}
+            disabled={compareDisabled}
+            title={compareSelected ? 'Remove from compare' : compareDisabled ? 'Already have 2 selected' : 'Add to compare'}
+          >
+            <CompareIcon />
+          </button>
           {t.isOwner && (
             <button
               className={styles.visibilityBtn}
@@ -591,6 +652,14 @@ function ImportIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 10V3M8 3L5 6M8 3l3 3" />
       <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
+    </svg>
+  )
+}
+
+function CompareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 3v10M11 3v10M2 8h12" />
     </svg>
   )
 }
