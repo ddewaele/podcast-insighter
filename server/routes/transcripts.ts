@@ -1,12 +1,12 @@
 import type { FastifyInstance } from 'fastify'
-import type { Transcript, User } from '@prisma/client'
+import type { Transcript, User, TranscriptTag, Tag } from '@prisma/client'
 import { v4 as uuid } from 'uuid'
 import { prisma } from '../db.js'
 import { requireAuth } from '../middleware.js'
 
-type TranscriptWithUser = Transcript & { user: User }
+type TranscriptWithUserAndTags = Transcript & { user: User; tags: (TranscriptTag & { tag: Tag })[] }
 
-function serializeTranscript(t: TranscriptWithUser, userId: string) {
+function serializeTranscript(t: TranscriptWithUserAndTags, userId: string) {
   return {
     id: t.id,
     userId: t.userId,
@@ -20,6 +20,7 @@ function serializeTranscript(t: TranscriptWithUser, userId: string) {
     updatedAt: t.updatedAt,
     isOwner: t.userId === userId,
     owner: { id: t.user.id, name: t.user.name, avatarUrl: t.user.avatarUrl },
+    tags: t.tags.map(tt => ({ id: tt.tag.id, name: tt.tag.name })),
   }
 }
 
@@ -100,7 +101,7 @@ export async function transcriptRoutes(app: FastifyInstance) {
     const userId = request.session.get('userId') ?? ''
     const transcripts = await prisma.transcript.findMany({
       where: { OR: [{ isPublic: true }, { userId }] },
-      include: { user: true },
+      include: { user: true, tags: { include: { tag: true } } },
       orderBy: { createdAt: 'desc' },
     })
     return transcripts.map(t => serializeTranscript(t, userId))
@@ -111,7 +112,7 @@ export async function transcriptRoutes(app: FastifyInstance) {
     const userId = request.session.get('userId') ?? ''
     const t = await prisma.transcript.findUnique({
       where: { id: request.params.id },
-      include: { user: true },
+      include: { user: true, tags: { include: { tag: true } } },
     })
     if (!t) return reply.status(404).send({ error: 'Not found' })
     if (!t.isPublic && t.userId !== userId) return reply.status(403).send({ error: 'Forbidden' })

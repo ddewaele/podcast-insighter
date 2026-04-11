@@ -79,6 +79,7 @@ export interface TranscriptListItem {
   updatedAt: string
   isOwner: boolean
   owner: { id: string; name: string; avatarUrl: string | null }
+  tags: { id: string; name: string }[]
 }
 
 export interface TranscriptAnalysis {
