@@ -428,6 +428,15 @@ interface CardProps {
 
 function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibilityChange }: CardProps) {
   const [togglingVisibility, setTogglingVisibility] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  function handleCopyLink() {
+    const url = `${window.location.origin}/t/${t.id}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   const date = new Date(t.createdAt).toLocaleDateString('en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
@@ -475,6 +484,15 @@ function TranscriptCard({ transcript: t, loading, onOpen, onDelete, onVisibility
               title={t.isPublic ? 'Make private' : 'Make public'}
             >
               {t.isPublic ? <GlobeIcon /> : <LockIcon />}
+            </button>
+          )}
+          {t.isPublic && (
+            <button
+              className={styles.visibilityBtn}
+              onClick={handleCopyLink}
+              title={copied ? 'Copied!' : 'Copy shareable link'}
+            >
+              {copied ? <CheckIcon /> : <LinkIcon />}
             </button>
           )}
           {t.isOwner && (
@@ -591,6 +609,23 @@ function ImportIcon() {
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 10V3M8 3L5 6M8 3l3 3" />
       <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
+    </svg>
+  )
+}
+
+function LinkIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6.5 9.5a3.536 3.536 0 0 0 5 0l2-2a3.536 3.536 0 0 0-5-5L7 4" />
+      <path d="M9.5 6.5a3.536 3.536 0 0 0-5 0l-2 2a3.536 3.536 0 0 0 5 5L9 12" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 8.5l3.5 3.5 7-7" />
     </svg>
   )
 }
